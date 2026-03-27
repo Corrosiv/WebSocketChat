@@ -7,6 +7,7 @@
 <body>
   <h3>Live Chat Test Client</h3>
   <label>Username: <input id="username" /></label>
+  <label>Server WS URL: <input id="serverUrl" value="ws://localhost:5223/ws" style="width:220px" /></label>
   <button id="connect">Connect</button>
   <div id="status"></div>
   <div id="messages" style="border:1px solid #ccc; padding:8px; height:300px; overflow:auto;"></div>
@@ -17,20 +18,36 @@
     let ws;
     document.getElementById('connect').addEventListener('click', () => {
       const username = document.getElementById('username').value || 'anon';
-      ws = new WebSocket(`ws://${location.host}/ws`);
+      const serverUrlInput = document.getElementById('serverUrl').value;
+      const wsUrl = serverUrlInput && serverUrlInput.length > 0 ? serverUrlInput : `ws://${location.host}/ws`;
+      try {
+        ws = new WebSocket(wsUrl);
+      } catch (err) {
+        document.getElementById('status').innerText = `Connection error: ${err}`;
+        return;
+      }
       ws.onopen = () => {
         document.getElementById('status').innerText = 'Connected';
         // Announce username to the server using a join message
         const join = { type: 'join', username };
         ws.send(JSON.stringify(join));
       };
-      ws.onmessage = e => {
-        const m = JSON.parse(e.data);
-        const el = document.createElement('div');
-        el.textContent = `[${m.timestamp || ''}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
-        document.getElementById('messages').appendChild(el);
+      ws.onerror = (ev) => {
+        document.getElementById('status').innerText = 'WebSocket error';
       };
-      ws.onclose = () => document.getElementById('status').innerText = 'Closed';
+      ws.onclose = () => {
+        document.getElementById('status').innerText = 'Closed';
+      };
+      ws.onmessage = e => {
+        try {
+          const m = JSON.parse(e.data);
+          const el = document.createElement('div');
+          el.textContent = `[${m.timestamp || ''}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
+          document.getElementById('messages').appendChild(el);
+        } catch (ex) {
+          console.warn('Failed to parse message', ex, e.data);
+        }
+      };
     });
 
     document.getElementById('send').addEventListener('click', () => {
