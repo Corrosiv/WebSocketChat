@@ -15,5 +15,7 @@ namespace LiveChatServer.Services
         Task SetUsernameAsync(string connectionId, string username);
         // Get the username associated with a connection id, or null if none.
         string? GetUsername(string connectionId);
+        // Get all active connection ids (test / monitoring helper).
+        string[] GetConnectionIds();
     }
 }
