@@ -11,5 +11,9 @@ namespace LiveChatServer.Services
         int Count { get; }
         // Broadcast a text message to all connected clients.
         Task BroadcastAsync(string message);
+        // Associate a username with a connection id (join event).
+        Task SetUsernameAsync(string connectionId, string username);
+        // Get the username associated with a connection id, or null if none.
+        string? GetUsername(string connectionId);
     }
 }

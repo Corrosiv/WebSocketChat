@@ -40,15 +40,26 @@ namespace LiveChatServer.Services
                 try
                 {
                     using var doc = JsonDocument.Parse(msg);
-                    if (doc.RootElement.TryGetProperty("type", out var t) && t.GetString() == "message")
+                    if (doc.RootElement.TryGetProperty("type", out var t))
                     {
-                        var content = doc.RootElement.GetProperty("content").GetString() ?? string.Empty;
-                        var username = doc.RootElement.TryGetProperty("username", out var u) ? u.GetString() ?? "" : "";
-                        var chat = new ChatMessage { Username = username, Content = content, Timestamp = DateTime.UtcNow };
-                        await _repo.AddMessageAsync(chat);
+                        var type = t.GetString();
+                        if (type == "message")
+                        {
+                            var content = doc.RootElement.GetProperty("content").GetString() ?? string.Empty;
+                            var username = doc.RootElement.TryGetProperty("username", out var u) ? u.GetString() ?? string.Empty : _connections.GetUsername(connectionId) ?? string.Empty;
+                            var chat = new ChatMessage { Username = username, Content = content, Timestamp = DateTime.UtcNow };
+                            await _repo.AddMessageAsync(chat);
 
-                        var broadcast = JsonSerializer.Serialize(new { type = "message", username = chat.Username, content = chat.Content, timestamp = chat.Timestamp });
-                        await _connections.BroadcastAsync(broadcast);
+                            var broadcast = JsonSerializer.Serialize(new { type = "message", username = chat.Username, content = chat.Content, timestamp = chat.Timestamp });
+                            await _connections.BroadcastAsync(broadcast);
+                        }
+                        else if (type == "join")
+                        {
+                            var username = doc.RootElement.GetProperty("username").GetString() ?? string.Empty;
+                            await _connections.SetUsernameAsync(connectionId, username);
+                            var evt = JsonSerializer.Serialize(new { type = "join", username, timestamp = DateTime.UtcNow });
+                            await _connections.BroadcastAsync(evt);
+                        }
                     }
                 }
                 catch { /* ignore malformed messages for prototype */ }

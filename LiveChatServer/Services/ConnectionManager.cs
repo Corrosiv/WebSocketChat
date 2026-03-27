@@ -7,6 +7,7 @@ namespace LiveChatServer.Services
     public class ConnectionManager : IConnectionManager
     {
         private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
+        private readonly ConcurrentDictionary<string, string> _usernames = new();
 
         public Task AddConnectionAsync(string id, WebSocket socket)
         {
@@ -40,6 +41,17 @@ namespace LiveChatServer.Services
                     catch { /* best-effort broadcast for prototype */ }
                 }
             }
+        }
+
+        public Task SetUsernameAsync(string connectionId, string username)
+        {
+            _usernames[connectionId] = username ?? string.Empty;
+            return Task.CompletedTask;
+        }
+
+        public string? GetUsername(string connectionId)
+        {
+            return _usernames.TryGetValue(connectionId, out var u) ? u : null;
         }
     }
 }
