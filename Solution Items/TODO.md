@@ -107,6 +107,3 @@ Tasks
 
 ---
 
-If you want, I can:
-- Create the `Solution Items/client/example.html` minimal client now.
-- Scaffold `IMessageRepository` and a SQLite implementation in `LiveChatServer` to start Sprint 1.
