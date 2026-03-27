@@ -11,11 +11,13 @@ namespace LiveChatServer.Services
     {
         private readonly IMessageRepository _repo;
         private readonly IConnectionManager _connections;
+        private readonly Microsoft.Extensions.Logging.ILogger<MessageHandler> _logger;
 
-        public MessageHandler(IMessageRepository repo, IConnectionManager connections)
+        public MessageHandler(IMessageRepository repo, IConnectionManager connections, Microsoft.Extensions.Logging.ILogger<MessageHandler> logger)
         {
             _repo = repo;
             _connections = connections;
+            _logger = logger;
         }
         public Task HandleAsync(string connectionId, WebSocket socket)
         {
@@ -49,9 +51,11 @@ namespace LiveChatServer.Services
                             var username = doc.RootElement.TryGetProperty("username", out var u) ? u.GetString() ?? string.Empty : _connections.GetUsername(connectionId) ?? string.Empty;
                             var chat = new ChatMessage { Username = username, Content = content, Timestamp = DateTime.UtcNow };
                             await _repo.AddMessageAsync(chat);
+                            _logger.LogInformation("Persisted message from {Username}: {Content}", chat.Username, chat.Content);
 
                             var broadcast = JsonSerializer.Serialize(new { type = "message", username = chat.Username, content = chat.Content, timestamp = chat.Timestamp });
                             await _connections.BroadcastAsync(broadcast);
+                            _logger.LogDebug("Broadcasted message event for {ConnectionId}", connectionId);
                         }
                         else if (type == "join")
                         {
@@ -59,10 +63,15 @@ namespace LiveChatServer.Services
                             await _connections.SetUsernameAsync(connectionId, username);
                             var evt = JsonSerializer.Serialize(new { type = "join", username, timestamp = DateTime.UtcNow });
                             await _connections.BroadcastAsync(evt);
+                            _logger.LogInformation("Connection {ConnectionId} joined as {Username}", connectionId, username);
                         }
                     }
                 }
-                catch { /* ignore malformed messages for prototype */ }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse or handle message from {ConnectionId}", connectionId);
+                    // ignore malformed messages for prototype
+                }
             }
         }
     }
