@@ -18,6 +18,8 @@ namespace LiveChatServer.Services
         public Task RemoveConnectionAsync(string id)
         {
             _connections.TryRemove(id, out _);
+            // Remove any associated username mapping to avoid stale entries.
+            _usernames.TryRemove(id, out _);
             return Task.CompletedTask;
         }
 
@@ -45,7 +47,11 @@ namespace LiveChatServer.Services
 
         public Task SetUsernameAsync(string connectionId, string username)
         {
-            _usernames[connectionId] = username ?? string.Empty;
+            // Only set the username if the connection is known to avoid mapping unknown ids.
+            if (_connections.ContainsKey(connectionId))
+            {
+                _usernames[connectionId] = username ?? string.Empty;
+            }
             return Task.CompletedTask;
         }
 
