@@ -29,8 +29,26 @@
         document.getElementById('status').innerText = `Connection error: ${err}`;
         return;
       }
-      ws.onopen = () => {
-        document.getElementById('status').innerText = 'Connected';
+      ws.onopen = async () => {
+        setStatus('Connected');
+        // Load recent message history from the HTTP API and render as initial chat state
+        try {
+          // derive HTTP base from WS url (ws://host[:port]/ws -> http://host[:port])
+          const serverUrlInput = document.getElementById('serverUrl').value;
+          const wsBase = serverUrlInput && serverUrlInput.length > 0 ? serverUrlInput : `ws://${location.host}/ws`;
+          const httpBase = wsBase.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:').replace(/\/ws\/?$/i, '');
+          const resp = await fetch(httpBase + '/api/messages?limit=50');
+          if (resp.ok) {
+            const msgs = await resp.json();
+            // clear existing messages area and render history
+            const container = document.getElementById('messages');
+            container.innerHTML = '';
+            msgs.forEach(m => renderMessage(m, /*isHistory*/ true));
+          }
+        } catch (err) {
+          console.warn('Failed to load message history', err);
+        }
+
         // Announce username to the server using a join message
         const join = { type: 'join', username };
         ws.send(JSON.stringify(join));
@@ -44,33 +62,7 @@
       ws.onmessage = e => {
         try {
           const m = JSON.parse(e.data);
-          const el = document.createElement('div');
-          if (m.type === 'join') {
-            el.textContent = `[${m.timestamp || ''}] ${m.username} joined`; 
-            el.style.fontStyle = 'italic';
-            el.style.color = '#444';
-          } else if (m.type === 'leave') {
-            el.textContent = `[${m.timestamp || ''}] ${m.username} left`;
-            el.style.fontStyle = 'italic';
-            el.style.color = '#444';
-          } else if (m.type === 'message') {
-            el.textContent = `[${m.timestamp || ''}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
-          } else {
-            el.textContent = JSON.stringify(m);
-          }
-          document.getElementById('messages').appendChild(el);
-          // handle typing UI
-          if (m.type === 'typing') {
-            const typingEl = document.getElementById('typing');
-            if (m.isTyping) {
-              typingEl.textContent = `${m.username} is typing...`;
-            } else {
-              // clear only if the same user stopped
-              if (typingEl.textContent && typingEl.textContent.startsWith(m.username)) {
-                typingEl.textContent = '';
-              }
-            }
-          }
+          renderMessage(m, /*isHistory*/ false);
         } catch (ex) {
           console.warn('Failed to parse message', ex, e.data);
         }
@@ -101,6 +93,47 @@
 
     // update typing UI when typing events arrive
     const originalOnMessage = window.wsOnMessage; // not set; safe guard
+
+    function renderMessage(m, isHistory) {
+      const el = document.createElement('div');
+      const ts = m.timestamp || '';
+      if (m.type === 'join') {
+        el.textContent = `[${ts}] ${m.username} joined`;
+        el.style.fontStyle = 'italic';
+        el.style.color = '#444';
+      } else if (m.type === 'leave') {
+        el.textContent = `[${ts}] ${m.username} left`;
+        el.style.fontStyle = 'italic';
+        el.style.color = '#444';
+      } else if (m.type === 'message') {
+        el.textContent = `[${ts}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
+      } else if (m.type === 'typing') {
+        // typing events are displayed in the typing region rather than messages list
+        const typingEl = document.getElementById('typing');
+        if (m.isTyping) {
+          typingEl.textContent = `${m.username} is typing...`;
+        } else {
+          if (typingEl.textContent && typingEl.textContent.startsWith(m.username)) {
+            typingEl.textContent = '';
+          }
+        }
+        return;
+      } else {
+        el.textContent = JSON.stringify(m);
+      }
+
+      // if rendering history, insert at top; otherwise append
+      const container = document.getElementById('messages');
+      if (isHistory) {
+        // show older messages first; insert before first child
+        if (container.firstChild) container.insertBefore(el, container.firstChild);
+        else container.appendChild(el);
+      } else {
+        container.appendChild(el);
+        // keep scroll pinned to bottom when new messages arrive
+        container.scrollTop = container.scrollHeight;
+      }
+    }
 
     // initialize UI state
     setStatus('Disconnected', 'disconnected');
