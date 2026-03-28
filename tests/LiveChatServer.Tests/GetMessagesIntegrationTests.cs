@@ -35,14 +35,18 @@ namespace LiveChatServer.Tests
                 });
             }
 
-            var resp = await client.GetAsync("/api/messages?limit=1");
+            var resp = await client.GetAsync("/api/messages?limit=1&offset=0");
             resp.EnsureSuccessStatusCode();
 
             var json = await resp.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var list = JsonSerializer.Deserialize<MessageDto[]>(json, options);
+            var page = JsonSerializer.Deserialize<PagedResponse<MessageDto>>(json, options);
 
-            Assert.NotNull(list);
+            Assert.NotNull(page);
+            Assert.Equal(1, page.Limit);
+            Assert.Equal(0, page.Offset);
+            Assert.Equal(1, page.Items is null ? 0 : ((MessageDto[])page.Items).Length);
+            var list = page.Items as MessageDto[] ?? new List<MessageDto>(page.Items).ToArray();
             Assert.Single(list);
             Assert.Equal("message", list[0].Type);
             Assert.Equal("testuser", list[0].Username);

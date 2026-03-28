@@ -3,7 +3,7 @@
 ## Summary
 This PR prepares Sprint 1 for review. It implements a prototype real-time chat server using raw WebSockets, message persistence (SQLite), a minimal browser test client, and automated tests (unit, integration, end-to-end). The code is organized for clarity and reviewability.
 
-Branch: `dev` → `main` (draft)
+Branch: `dev` → `main`
 
 ## What I changed
 - WebSocket transport and middleware
@@ -74,4 +74,4 @@ Branch: `dev` → `main` (draft)
 
 ---
 
-If you'd like I can open a draft PR on GitHub using the `gh` CLI and populate the description with this text. Tell me if you want me to do that and provide the repo owner/name if needed.
+

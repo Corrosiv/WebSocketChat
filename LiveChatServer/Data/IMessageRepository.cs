@@ -7,5 +7,7 @@ namespace LiveChatServer.Data
     {
         Task AddMessageAsync(ChatMessage message);
         Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit);
+        Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit, int offset);
+        Task<int> GetTotalCountAsync();
     }
 }

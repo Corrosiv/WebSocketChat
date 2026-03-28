@@ -15,9 +15,11 @@ namespace LiveChatServer.Controllers
         public MessagesController(IMessageRepository repo) => _repo = repo;
 
         [HttpGet]
-        public async Task<IEnumerable<MessageDto>> Get([FromQuery] int limit = 50)
+        public async Task<PagedResponse<MessageDto>> Get([FromQuery] int limit = 50, [FromQuery] int offset = 0)
         {
-            var msgs = await _repo.GetRecentMessagesAsync(limit);
+            var msgs = await _repo.GetRecentMessagesAsync(limit, offset);
+            var total = await _repo.GetTotalCountAsync();
+
             // Map domain ChatMessage to a client-friendly DTO
             var list = new List<MessageDto>();
             foreach (var m in msgs)
@@ -32,7 +34,13 @@ namespace LiveChatServer.Controllers
                 });
             }
 
-            return list;
+            return new PagedResponse<MessageDto>
+            {
+                Items = list,
+                Total = total,
+                Limit = limit,
+                Offset = offset
+            };
         }
     }
 }
