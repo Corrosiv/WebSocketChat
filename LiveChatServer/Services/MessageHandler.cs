@@ -65,6 +65,13 @@ namespace LiveChatServer.Services
                             await _connections.BroadcastAsync(evt);
                             _logger.LogInformation("Connection {ConnectionId} joined as {Username}", connectionId, username);
                         }
+                        else if (type == "leave")
+                        {
+                            var username = doc.RootElement.GetProperty("username").GetString() ?? string.Empty;
+                            var evt = JsonSerializer.Serialize(new { type = "leave", username, timestamp = DateTime.UtcNow });
+                            await _connections.BroadcastAsync(evt);
+                            _logger.LogInformation("Processed leave event for {ConnectionId} (user: {Username})", connectionId, username);
+                        }
                     }
                 }
                 catch (Exception ex)

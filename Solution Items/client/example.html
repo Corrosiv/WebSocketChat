@@ -44,7 +44,19 @@
         try {
           const m = JSON.parse(e.data);
           const el = document.createElement('div');
-          el.textContent = `[${m.timestamp || ''}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
+          if (m.type === 'join') {
+            el.textContent = `[${m.timestamp || ''}] ${m.username} joined`; 
+            el.style.fontStyle = 'italic';
+            el.style.color = '#444';
+          } else if (m.type === 'leave') {
+            el.textContent = `[${m.timestamp || ''}] ${m.username} left`;
+            el.style.fontStyle = 'italic';
+            el.style.color = '#444';
+          } else if (m.type === 'message') {
+            el.textContent = `[${m.timestamp || ''}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
+          } else {
+            el.textContent = JSON.stringify(m);
+          }
           document.getElementById('messages').appendChild(el);
         } catch (ex) {
           console.warn('Failed to parse message', ex, e.data);
