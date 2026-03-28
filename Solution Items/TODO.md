@@ -52,12 +52,21 @@ Tasks
 - Improve error handling and add user-friendly error messages to client.
 - Add more unit tests around connection lifecycle.
 
-Sprint 2 — Initial UX tasks (checklist)
-Priorities: High (H), Medium (M), Low (L)
+Status (current)
+- `typing` message handling: Done (server + client + unit & E2E tests added).
+- Connection lifecycle (pings/timeouts, background cleanup): In Progress (remove-on-close implemented; ping/timeout and background cleanup TODO).
+- Structured logging: Partial (basic logs added; expand for structured properties and levels).
+- Error handling / client messages: Partial (improvements present; more UX polish pending).
+- Additional lifecycle tests: Partial (connection manager tests exist; more lifecycle/timeout tests planned).
 
-- [H] Client: show connection status prominently (connecting / connected / disconnected) and retry guidance.
-- [H] Client: display join/system events in message area (e.g., "Pedro joined").
-- [H] Client & Server: typing indicator support (client sends `typing` events; server broadcasts typing state; client shows "user is typing...").
+Sprint 2 — Initial UX tasks (checklist)
+Priorities: Completed (C), High (H), Medium (M), Low (L)
+
+Priority legend: use `[C]` to mark completed tasks so they are easy to scan.
+
+- [C] Client: show connection status prominently (connecting / connected / disconnected) and retry guidance. — Completed
+- [C] Client: display join/system events in message area (e.g., "Pedro joined"). — Completed
+- [C] Client & Server: typing indicator support (client sends `typing` events; server broadcasts typing state; client shows "user is typing..."). — Completed
 - [M] Client: load recent message history on connect via `GET /api/messages` and render as initial chat state.
 - [M] Client: keep scroll pinned to bottom when user is at the bottom; do not auto-scroll when the user is reading history.
 - [M] Client: show timestamps in local timezone and make format configurable.
@@ -71,6 +80,12 @@ Notes:
 
 Done criteria
 - Typing works in the browser client and server logs show lifecycle events.
+
+Notes / Next steps
+- Add per-test SQLite isolation for tests (high priority) to make E2E hermetic for CI.
+- Implement ping/timeout and background cleanup for stale connections; add unit + E2E tests.
+- Add server-side typing timeout to auto-clear stale typing state.
+- Expand structured logging with connectionId/username and correlation IDs.
 
 ---
 
