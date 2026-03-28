@@ -3,6 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <title>Live Chat - Test Client</title>
+  <style>
+    /* Spinner and skeleton styles for message history loading */
+    #historyLoading { display: none; align-items: center; gap: 8px; }
+    .spinner { width: 16px; height: 16px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .skeleton { background: #eee; height: 14px; margin: 6px 0; border-radius: 4px; }
+    .skeleton.wave { background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%); background-size: 200% 100%; animation: wave 1.5s linear infinite; }
+    @keyframes wave { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+  </style>
 </head>
 <body>
   <h3>Live Chat Test Client</h3>
@@ -13,7 +23,12 @@
   <button id="retry" style="display:none">Retry</button>
   <div id="status">Disconnected</div>
   <div id="messages" style="border:1px solid #ccc; padding:8px; height:300px; overflow:auto;"></div>
-  <div id="historyLoading" style="font-size:12px; color:#666; margin:6px 0; display:none">Loading message history…</div>
+  <div id="historyLoading" style="font-size:12px; color:#666; margin:6px 0; display:none">
+    <svg class="spinner" viewBox="0 0 50 50" aria-hidden="true" focusable="false">
+      <circle cx="25" cy="25" r="20" fill="none" stroke="#666" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4 31.4"></circle>
+    </svg>
+    <span>Loading message history…</span>
+  </div>
   <div id="typing" style="font-style:italic; color:#666; margin-top:6px"></div>
   <input id="message" placeholder="Type message..." />
   <button id="send">Send</button>
