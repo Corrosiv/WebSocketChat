@@ -62,8 +62,6 @@ Status (current)
 Sprint 2 — Initial UX tasks (checklist)
 Priorities: Completed (C), High (H), Medium (M), Low (L)
 
-Priority legend: use `[C]` to mark completed tasks so they are easy to scan.
-
 - [C] Client: show connection status prominently (connecting / connected / disconnected) and retry guidance. — Completed
 - [C] Client: display join/system events in message area (e.g., "Pedro joined"). — Completed
 - [C] Client & Server: typing indicator support (client sends `typing` events; server broadcasts typing state; client shows "user is typing..."). — Completed
