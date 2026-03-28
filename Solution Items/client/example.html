@@ -9,7 +9,9 @@
   <label>Username: <input id="username" /></label>
   <label>Server WS URL: <input id="serverUrl" value="ws://localhost:5223/ws" style="width:220px" /></label>
   <button id="connect">Connect</button>
-  <div id="status"></div>
+  <button id="disconnect" disabled>Disconnect</button>
+  <button id="retry" style="display:none">Retry</button>
+  <div id="status">Disconnected</div>
   <div id="messages" style="border:1px solid #ccc; padding:8px; height:300px; overflow:auto;"></div>
   <input id="message" placeholder="Type message..." />
   <button id="send">Send</button>
@@ -57,6 +59,10 @@
       const payload = { type: 'message', username, content };
       ws.send(JSON.stringify(payload));
     });
+
+    // initialize UI state
+    setStatus('Disconnected', 'disconnected');
+    updateUiForState();
   </script>
 </body>
 </html>
