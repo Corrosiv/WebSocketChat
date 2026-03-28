@@ -1,8 +1,14 @@
 using LiveChatServer.Data;
 using LiveChatServer.Services;
 using LiveChatServer.WebSockets;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging for local development and CI visibility
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 // Register message repository (SQLite) for persistence. The repository is a simple scaffold
 // and can be replaced or extended later.
