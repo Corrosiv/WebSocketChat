@@ -8,6 +8,7 @@ namespace LiveChatServer.Services
     {
         private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
         private readonly ConcurrentDictionary<string, string> _usernames = new();
+        private readonly ConcurrentDictionary<string, bool> _typing = new();
 
         public Task AddConnectionAsync(string id, WebSocket socket)
         {
@@ -58,6 +59,33 @@ namespace LiveChatServer.Services
         public string? GetUsername(string connectionId)
         {
             return _usernames.TryGetValue(connectionId, out var u) ? u : null;
+        }
+
+        public Task SetTypingAsync(string connectionId, bool isTyping)
+        {
+            if (_connections.ContainsKey(connectionId))
+            {
+                _typing[connectionId] = isTyping;
+            }
+            return Task.CompletedTask;
+        }
+
+        public bool IsTyping(string connectionId)
+        {
+            return _typing.TryGetValue(connectionId, out var v) && v;
+        }
+
+        public string[] GetTypingUsers()
+        {
+            var users = new System.Collections.Generic.List<string>();
+            foreach (var kv in _typing)
+            {
+                if (kv.Value && _usernames.TryGetValue(kv.Key, out var name) && !string.IsNullOrEmpty(name))
+                {
+                    users.Add(name);
+                }
+            }
+            return users.ToArray();
         }
     }
 }
