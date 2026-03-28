@@ -35,12 +35,6 @@ Done criteria
 
 - Sprint 1 is complete: all AC met and tests pass locally.
 
-Notes / next actions to finish Sprint 1
-- Improve test isolation: configure the test WebApplicationFactory to use a temporary per-test SQLite database (avoids interference and makes CI reliable).
-- Add more lifecycle E2E tests (connect, join, send, disconnect) and stronger assertions on broadcast ordering and message shapes.
-- Consider reducing log verbosity in CI (set Information level) while keeping Debug locally; or make log level environment-aware.
-- Polish client UX (show join/system events, connection state) and add an input for overriding server URL to simplify manual testing.
-
 ---
 
 ## Sprint 2 — UX & Reliability
@@ -57,6 +51,23 @@ Tasks
 - Integrate structured logging (Microsoft.Extensions.Logging) and add basic log levels.
 - Improve error handling and add user-friendly error messages to client.
 - Add more unit tests around connection lifecycle.
+
+Sprint 2 — Initial UX tasks (checklist)
+Priorities: High (H), Medium (M), Low (L)
+
+- [H] Client: show connection status prominently (connecting / connected / disconnected) and retry guidance.
+- [H] Client: display join/system events in message area (e.g., "Pedro joined").
+- [H] Client & Server: typing indicator support (client sends `typing` events; server broadcasts typing state; client shows "user is typing...").
+- [M] Client: load recent message history on connect via `GET /api/messages` and render as initial chat state.
+- [M] Client: keep scroll pinned to bottom when user is at the bottom; do not auto-scroll when the user is reading history.
+- [M] Client: show timestamps in local timezone and make format configurable.
+- [M] Client: small UI polish (input focus, enter-to-send, disabled send when offline).
+- [L] Client: add visual distinction for system messages vs user messages.
+- [L] Tests: add UI-level integration tests (headless browser or simulated DOM) for key UX flows: join, send, typing indicator.
+
+Notes:
+- Start with High priorities for Sprint 2; Medium can follow in the sprint scope depending on velocity.
+- Use feature branches off `dev` (e.g., `feat/typing-indicator`, `feat/client-ux`) and small commits describing changes.
 
 Done criteria
 - Typing works in the browser client and server logs show lifecycle events.

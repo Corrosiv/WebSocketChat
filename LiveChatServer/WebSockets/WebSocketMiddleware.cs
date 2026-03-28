@@ -59,6 +59,22 @@ namespace LiveChatServer.WebSockets
             }
             finally
             {
+                // Broadcast a leave/system event if the connection had an associated username
+                try
+                {
+                    var username = _connections.GetUsername(connectionId);
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        var leaveEvent = System.Text.Json.JsonSerializer.Serialize(new { type = "leave", username, timestamp = DateTime.UtcNow });
+                        await _connections.BroadcastAsync(leaveEvent);
+                        _logger.LogInformation("Broadcasted leave event for {ConnectionId} (user: {Username})", connectionId, username);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to broadcast leave event for {ConnectionId}", connectionId);
+                }
+
                 // Ensure cleanup if the handler did not already remove it
                 await _connections.RemoveConnectionAsync(connectionId);
                 try { webSocket.Dispose(); } catch { }
