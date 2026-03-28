@@ -20,6 +20,7 @@
   <label>Server WS URL: <input id="serverUrl" value="ws://localhost:5223/ws" style="width:220px" /></label>
   <button id="connect">Connect</button>
   <button id="disconnect" disabled>Disconnect</button>
+  <button id="loadMore" style="display:none; margin-left:8px">Load older</button>
   <button id="retry" style="display:none">Retry</button>
   <div id="status">Disconnected</div>
   <div id="messages" style="border:1px solid #ccc; padding:8px; height:300px; overflow:auto;"></div>
@@ -35,6 +36,9 @@
 
   <script>
     let ws;
+    let historyLimit = 50;
+    let historyOffset = 0;
+    let historyTotal = 0;
     document.getElementById('connect').addEventListener('click', () => {
       const username = document.getElementById('username').value || 'anon';
       const serverUrlInput = document.getElementById('serverUrl').value;
@@ -53,13 +57,23 @@
           const serverUrlInput = document.getElementById('serverUrl').value;
           const wsBase = serverUrlInput && serverUrlInput.length > 0 ? serverUrlInput : `ws://${location.host}/ws`;
           const httpBase = wsBase.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:').replace(/\/ws\/?$/i, '');
-          const resp = await fetch(httpBase + '/api/messages?limit=50');
+          const resp = await fetch(httpBase + `/api/messages?limit=${historyLimit}&offset=${historyOffset}`);
           if (resp.ok) {
-            const msgs = await resp.json();
+            const page = await resp.json();
             // clear existing messages area and render history
-            const container = document.getElementById('messages');
             container.innerHTML = '';
-            msgs.forEach(m => renderMessage(m, /*isHistory*/ true));
+            const items = page.items || page.Items || [];
+            historyTotal = page.total || page.Total || 0;
+            // render items in natural order (oldest->newest) for initial load
+            items.forEach(m => renderMessage(m, /*isHistory*/ true));
+            // show load more button if there are older messages
+            if ((historyOffset + items.length) < historyTotal) {
+              loadMoreBtn.style.display = 'inline-block';
+            } else {
+              loadMoreBtn.style.display = 'none';
+            }
+            // prepare offset for next (older) page
+            historyOffset += historyLimit;
           }
         } catch (err) {
           console.warn('Failed to load message history', err);
@@ -150,6 +164,35 @@
         container.scrollTop = container.scrollHeight;
       }
     }
+
+    // load older messages when requested
+    document.getElementById('loadMore').addEventListener('click', async () => {
+      const loadMoreBtn = document.getElementById('loadMore');
+      const loadingEl = document.getElementById('historyLoading');
+      const container = document.getElementById('messages');
+      loadingEl.style.display = 'flex';
+      try {
+        const serverUrlInput = document.getElementById('serverUrl').value;
+        const wsBase = serverUrlInput && serverUrlInput.length > 0 ? serverUrlInput : `ws://${location.host}/ws`;
+        const httpBase = wsBase.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:').replace(/\/ws\/?$/i, '');
+        const resp = await fetch(httpBase + `/api/messages?limit=${historyLimit}&offset=${historyOffset}`);
+        if (resp.ok) {
+          const page = await resp.json();
+          const items = page.items || page.Items || [];
+          // insert older messages above existing; iterate in reverse so order remains oldest->newest
+          for (let i = items.length - 1; i >= 0; i--) {
+            renderMessage(items[i], /*isHistory*/ true);
+          }
+          historyTotal = page.total || page.Total || historyTotal;
+          historyOffset += historyLimit;
+          if ((historyOffset) >= historyTotal) loadMoreBtn.style.display = 'none';
+        }
+      } catch (err) {
+        console.warn('Failed to load older messages', err);
+      } finally {
+        loadingEl.style.display = 'none';
+      }
+    });
 
     // initialize UI state
     setStatus('Disconnected', 'disconnected');
