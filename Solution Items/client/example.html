@@ -13,6 +13,7 @@
   <button id="retry" style="display:none">Retry</button>
   <div id="status">Disconnected</div>
   <div id="messages" style="border:1px solid #ccc; padding:8px; height:300px; overflow:auto;"></div>
+  <div id="typing" style="font-style:italic; color:#666; margin-top:6px"></div>
   <input id="message" placeholder="Type message..." />
   <button id="send">Send</button>
 
@@ -58,6 +59,18 @@
             el.textContent = JSON.stringify(m);
           }
           document.getElementById('messages').appendChild(el);
+          // handle typing UI
+          if (m.type === 'typing') {
+            const typingEl = document.getElementById('typing');
+            if (m.isTyping) {
+              typingEl.textContent = `${m.username} is typing...`;
+            } else {
+              // clear only if the same user stopped
+              if (typingEl.textContent && typingEl.textContent.startsWith(m.username)) {
+                typingEl.textContent = '';
+              }
+            }
+          }
         } catch (ex) {
           console.warn('Failed to parse message', ex, e.data);
         }
@@ -71,6 +84,23 @@
       const payload = { type: 'message', username, content };
       ws.send(JSON.stringify(payload));
     });
+
+    // typing indicator: send typing events while the user types
+    let typingTimer;
+    const typingEl = document.getElementById('typing');
+    document.getElementById('message').addEventListener('input', () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      // send typing=true
+      const username = document.getElementById('username').value || 'anon';
+      ws.send(JSON.stringify({ type: 'typing', username, isTyping: true }));
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        ws.send(JSON.stringify({ type: 'typing', username, isTyping: false }));
+      }, 1000);
+    });
+
+    // update typing UI when typing events arrive
+    const originalOnMessage = window.wsOnMessage; // not set; safe guard
 
     // initialize UI state
     setStatus('Disconnected', 'disconnected');

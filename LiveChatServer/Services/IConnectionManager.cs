@@ -17,5 +17,11 @@ namespace LiveChatServer.Services
         string? GetUsername(string connectionId);
         // Get all active connection ids (test / monitoring helper).
         string[] GetConnectionIds();
+        // Track typing state for a connection (true = typing, false = not typing)
+        Task SetTypingAsync(string connectionId, bool isTyping);
+        // Query typing state for a connection
+        bool IsTyping(string connectionId);
+        // Get list of usernames currently typing
+        string[] GetTypingUsers();
     }
 }
