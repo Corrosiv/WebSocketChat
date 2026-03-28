@@ -40,12 +40,24 @@ namespace LiveChatServer.Tests
 
             var json = await resp.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var list = JsonSerializer.Deserialize<ChatMessage[]>(json, options);
+            var list = JsonSerializer.Deserialize<MessageDto[]>(json, options);
 
             Assert.NotNull(list);
             Assert.Single(list);
+            Assert.Equal("message", list[0].Type);
             Assert.Equal("testuser", list[0].Username);
             Assert.Equal("persisted", list[0].Content);
+            Assert.False(list[0].IsTyping);
         }
+    }
+
+    // simple DTO used to deserialize the controller response for assertions
+    private class MessageDto
+    {
+        public string Type { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public bool IsTyping { get; set; }
     }
 }
