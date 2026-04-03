@@ -10,7 +10,7 @@ namespace LiveChatServer.Tests
         public async void AddRemoveConnections_UpdatesCount()
         {
             var cm = new ConnectionManager();
-            var dummy = WebSocket.CreateClientWebSocket();
+            var dummy = new ClientWebSocket();
 
             await cm.AddConnectionAsync("1", dummy);
             Assert.Equal(1, cm.Count);

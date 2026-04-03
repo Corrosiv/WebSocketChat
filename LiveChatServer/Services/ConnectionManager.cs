@@ -21,6 +21,8 @@ namespace LiveChatServer.Services
             _connections.TryRemove(id, out _);
             // Remove any associated username mapping to avoid stale entries.
             _usernames.TryRemove(id, out _);
+            // Clear typing state for the disconnected user.
+            _typing.TryRemove(id, out _);
             return Task.CompletedTask;
         }
 

@@ -12,6 +12,29 @@
     .skeleton { background: #eee; height: 14px; margin: 6px 0; border-radius: 4px; }
     .skeleton.wave { background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%); background-size: 200% 100%; animation: wave 1.5s linear infinite; }
     @keyframes wave { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+
+    /* Message type distinction */
+    .msg-system {
+      font-style: italic;
+      color: #666;
+      background: #f9f9f9;
+      padding: 2px 6px;
+      border-left: 3px solid #bbb;
+      margin: 3px 0;
+      font-size: 0.92em;
+    }
+    .msg-user {
+      padding: 2px 6px;
+      margin: 3px 0;
+    }
+    .msg-user .msg-username {
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .msg-user .msg-ts {
+      color: #999;
+      font-size: 0.85em;
+    }
   </style>
 </head>
 <body>
@@ -169,15 +192,22 @@
       const el = document.createElement('div');
       const ts = formatTimestamp(m.timestamp || m.Timestamp);
       if (m.type === 'join') {
-        el.textContent = `[${ts}] ${m.username} joined`;
-        el.style.fontStyle = 'italic';
-        el.style.color = '#444';
+        el.className = 'msg-system';
+        el.textContent = `[${ts}] \u2192 ${m.username} joined`;
       } else if (m.type === 'leave') {
-        el.textContent = `[${ts}] ${m.username} left`;
-        el.style.fontStyle = 'italic';
-        el.style.color = '#444';
+        el.className = 'msg-system';
+        el.textContent = `[${ts}] \u2190 ${m.username} left`;
       } else if (m.type === 'message') {
-        el.textContent = `[${ts}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
+        el.className = 'msg-user';
+        const tsSpan = document.createElement('span');
+        tsSpan.className = 'msg-ts';
+        tsSpan.textContent = `[${ts}] `;
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'msg-username';
+        nameSpan.textContent = `${m.username || 'unknown'}: `;
+        el.appendChild(tsSpan);
+        el.appendChild(nameSpan);
+        el.appendChild(document.createTextNode(m.content || JSON.stringify(m)));
       } else if (m.type === 'typing') {
         // typing events are displayed in the typing region rather than messages list
         const typingEl = document.getElementById('typing');

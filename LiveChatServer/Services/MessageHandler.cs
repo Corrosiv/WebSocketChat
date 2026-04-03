@@ -33,8 +33,12 @@ namespace LiveChatServer.Services
                 var result = await socket.ReceiveAsync(seg, System.Threading.CancellationToken.None);
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await _connections.RemoveConnectionAsync(connectionId);
-                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by server", System.Threading.CancellationToken.None);
+                    // Don't remove connection here — the middleware's finally block handles
+                    // cleanup and leave-event broadcasting (it needs the username still mapped).
+                    if (socket.State == WebSocketState.CloseReceived)
+                    {
+                        await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closed by server", System.Threading.CancellationToken.None);
+                    }
                     break;
                 }
 

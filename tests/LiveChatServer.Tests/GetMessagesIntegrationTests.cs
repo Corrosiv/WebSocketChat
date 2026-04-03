@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -9,11 +11,11 @@ using Xunit;
 
 namespace LiveChatServer.Tests
 {
-    public class GetMessagesIntegrationTests : IClassFixture<WebApplicationFactory<LiveChatServer.Program>>
+    public class GetMessagesIntegrationTests : IClassFixture<IsolatedChatAppFactory>
     {
-        private readonly WebApplicationFactory<LiveChatServer.Program> _factory;
+        private readonly IsolatedChatAppFactory _factory;
 
-        public GetMessagesIntegrationTests(WebApplicationFactory<LiveChatServer.Program> factory)
+        public GetMessagesIntegrationTests(IsolatedChatAppFactory factory)
         {
             _factory = factory;
         }
@@ -45,8 +47,8 @@ namespace LiveChatServer.Tests
             Assert.NotNull(page);
             Assert.Equal(1, page.Limit);
             Assert.Equal(0, page.Offset);
-            Assert.Equal(1, page.Items is null ? 0 : ((MessageDto[])page.Items).Length);
-            var list = page.Items as MessageDto[] ?? new List<MessageDto>(page.Items).ToArray();
+            Assert.Equal(1, page.Items?.Count() ?? 0);
+            var list = page.Items?.ToArray() ?? Array.Empty<MessageDto>();
             Assert.Single(list);
             Assert.Equal("message", list[0].Type);
             Assert.Equal("testuser", list[0].Username);
@@ -56,7 +58,7 @@ namespace LiveChatServer.Tests
     }
 
     // simple DTO used to deserialize the controller response for assertions
-    private class MessageDto
+    internal class MessageDto
     {
         public string Type { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }

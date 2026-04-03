@@ -15,6 +15,14 @@ Quick run (from repo root):
 dotnet run --project LiveChatServer
 ```
 
+Run tests (from repo root):
+
+```powershell
+dotnet test
+```
+
+Each test class gets its own in-memory SQLite database via `IsolatedChatAppFactory`, so tests are hermetic and can run in any order.
+
 Useful links:
 - TODO: `Solution Items/TODO.md`
 - API spec: `Solution Items/API-SPEC.md`
@@ -45,6 +53,7 @@ Notes:
 
 Repository layout (high-level):
 - `LiveChatServer/` - server project (ASP.NET Core)
+- `tests/LiveChatServer.Tests/` - unit and integration tests (xUnit)
 - `Solution Items/` - project documentation and small tooling files (system overview, API spec, TODO, database design)
 
 Notes for reviewers:

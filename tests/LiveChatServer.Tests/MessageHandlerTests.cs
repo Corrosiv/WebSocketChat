@@ -1,9 +1,11 @@
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LiveChatServer.Data;
 using LiveChatServer.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace LiveChatServer.Tests
@@ -15,14 +17,7 @@ namespace LiveChatServer.Tests
         {
             var repo = new InMemoryRepo();
             var cm = new InMemoryConnectionManager();
-            var handler = new MessageHandler(repo, cm);
-
-            // Create a pair of connected WebSockets using client/server abstractions
-            using var server = WebSocket.CreateClientWebSocket();
-            using var client = WebSocket.CreateClientWebSocket();
-
-            // Not actually connected; invoke receiving logic by sending data to ReceiveLoop via a fake socket is non-trivial.
-            // Instead, validate repository persistence and broadcast by directly calling internal behaviors via simulation.
+            var handler = new MessageHandler(repo, cm, NullLogger<MessageHandler>.Instance);
 
             var chatJson = JsonSerializer.Serialize(new { type = "message", username = "alice", content = "hello" });
 
@@ -50,11 +45,24 @@ namespace LiveChatServer.Tests
             {
                 return Task.FromResult((System.Collections.Generic.IEnumerable<ChatMessage>)Messages);
             }
+
+            public Task<System.Collections.Generic.IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit, int offset)
+            {
+                var result = Messages.Skip(offset).Take(limit);
+                return Task.FromResult((System.Collections.Generic.IEnumerable<ChatMessage>)result.ToList());
+            }
+
+            public Task<int> GetTotalCountAsync()
+            {
+                return Task.FromResult(Messages.Count);
+            }
         }
 
         private class InMemoryConnectionManager : IConnectionManager
         {
             public System.Collections.Generic.List<string> SentMessages { get; } = new();
+            private readonly System.Collections.Generic.Dictionary<string, string> _usernames = new();
+            private readonly System.Collections.Generic.Dictionary<string, bool> _typing = new();
             public int Count => 0;
             public Task AddConnectionAsync(string id, WebSocket socket) => Task.CompletedTask;
             public Task RemoveConnectionAsync(string id) => Task.CompletedTask;
@@ -63,6 +71,23 @@ namespace LiveChatServer.Tests
                 SentMessages.Add(message);
                 return Task.CompletedTask;
             }
+            public Task SetUsernameAsync(string connectionId, string username)
+            {
+                _usernames[connectionId] = username;
+                return Task.CompletedTask;
+            }
+            public string? GetUsername(string connectionId) =>
+                _usernames.TryGetValue(connectionId, out var u) ? u : null;
+            public string[] GetConnectionIds() => System.Array.Empty<string>();
+            public Task SetTypingAsync(string connectionId, bool isTyping)
+            {
+                _typing[connectionId] = isTyping;
+                return Task.CompletedTask;
+            }
+            public bool IsTyping(string connectionId) =>
+                _typing.TryGetValue(connectionId, out var v) && v;
+            public string[] GetTypingUsers() =>
+                _typing.Where(kv => kv.Value).Select(kv => _usernames.TryGetValue(kv.Key, out var u) ? u : kv.Key).ToArray();
         }
     }
 }

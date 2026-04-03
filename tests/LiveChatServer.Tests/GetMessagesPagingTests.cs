@@ -9,11 +9,11 @@ using Xunit;
 
 namespace LiveChatServer.Tests
 {
-    public class GetMessagesPagingTests : IClassFixture<WebApplicationFactory<LiveChatServer.Program>>
+    public class GetMessagesPagingTests : IClassFixture<IsolatedChatAppFactory>
     {
-        private readonly WebApplicationFactory<LiveChatServer.Program> _factory;
+        private readonly IsolatedChatAppFactory _factory;
 
-        public GetMessagesPagingTests(WebApplicationFactory<LiveChatServer.Program> factory)
+        public GetMessagesPagingTests(IsolatedChatAppFactory factory)
         {
             _factory = factory;
         }

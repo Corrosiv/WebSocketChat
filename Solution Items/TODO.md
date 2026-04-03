@@ -56,7 +56,7 @@ Status (current)
 - `typing` message handling: Done (server + client + unit & E2E tests added).
 - Connection lifecycle (pings/timeouts, background cleanup): In Progress (remove-on-close implemented; ping/timeout and background cleanup TODO).
 - Structured logging: Partial (basic logs added; expand for structured properties and levels).
-- Error handling / client messages: Partial (improvements present; more UX polish pending).
+- Error handling / client messages: Done (smart scroll, local timestamps, UI polish, disconnect handler implemented).
 - Additional lifecycle tests: Partial (connection manager tests exist; more lifecycle/timeout tests planned).
 
 Sprint 2 — Initial UX tasks (checklist)
@@ -65,10 +65,10 @@ Priorities: Completed (C), High (H), Medium (M), Low (L)
 - [C] Client: show connection status prominently (connecting / connected / disconnected) and retry guidance. — Completed
 - [C] Client: display join/system events in message area (e.g., "Pedro joined"). — Completed
 - [C] Client & Server: typing indicator support (client sends `typing` events; server broadcasts typing state; client shows "user is typing..."). — Completed
-- [M] Client: load recent message history on connect via `GET /api/messages` and render as initial chat state.
-- [M] Client: keep scroll pinned to bottom when user is at the bottom; do not auto-scroll when the user is reading history.
-- [M] Client: show timestamps in local timezone and make format configurable.
-- [M] Client: small UI polish (input focus, enter-to-send, disabled send when offline).
+- [C] Client: load recent message history on connect via `GET /api/messages` and render as initial chat state. — Completed
+- [C] Client: keep scroll pinned to bottom when user is at the bottom; do not auto-scroll when the user is reading history. — Completed
+- [C] Client: show timestamps in local timezone and make format configurable. — Completed
+- [C] Client: small UI polish (input focus, enter-to-send, disabled send when offline). — Completed
 - [L] Client: add visual distinction for system messages vs user messages.
 - [L] Tests: add UI-level integration tests (headless browser or simulated DOM) for key UX flows: join, send, typing indicator.
 
@@ -80,7 +80,7 @@ Done criteria
 - Typing works in the browser client and server logs show lifecycle events.
 
 Notes / Next steps
-- Add per-test SQLite isolation for tests (high priority) to make E2E hermetic for CI.
+- Add per-test SQLite isolation for tests — Done (`IsolatedChatAppFactory` gives each test class its own in-memory DB).
 - Implement ping/timeout and background cleanup for stale connections; add unit + E2E tests.
 - Add server-side typing timeout to auto-clear stale typing state.
 - Expand structured logging with connectionId/username and correlation IDs.

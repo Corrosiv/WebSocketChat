@@ -9,11 +9,11 @@ using Xunit;
 
 namespace LiveChatServer.Tests
 {
-    public class WebSocketTypingStopIntegrationTests : IClassFixture<WebApplicationFactory<LiveChatServer.Program>>
+    public class WebSocketTypingStopIntegrationTests : IClassFixture<IsolatedChatAppFactory>
     {
-        private readonly WebApplicationFactory<LiveChatServer.Program> _factory;
+        private readonly IsolatedChatAppFactory _factory;
 
-        public WebSocketTypingStopIntegrationTests(WebApplicationFactory<LiveChatServer.Program> factory)
+        public WebSocketTypingStopIntegrationTests(IsolatedChatAppFactory factory)
         {
             _factory = factory;
         }
@@ -21,14 +21,10 @@ namespace LiveChatServer.Tests
         [Fact]
         public async Task TypingStopEvent_WhenSent_IsBroadcastToOtherClients()
         {
-            using var client = _factory.CreateDefaultClient();
-            var wsUri = new Uri(client.BaseAddress, "/ws");
+            var wsClient = _factory.Server.CreateWebSocketClient();
 
-            using var ws1 = new ClientWebSocket();
-            using var ws2 = new ClientWebSocket();
-
-            await ws1.ConnectAsync(wsUri, CancellationToken.None);
-            await ws2.ConnectAsync(wsUri, CancellationToken.None);
+            using var ws1 = await wsClient.ConnectAsync(new Uri("ws://localhost/ws"), CancellationToken.None);
+            using var ws2 = await wsClient.ConnectAsync(new Uri("ws://localhost/ws"), CancellationToken.None);
 
             // Send join for both so usernames are known
             var join1 = JsonSerializer.Serialize(new { type = "join", username = "carol" });

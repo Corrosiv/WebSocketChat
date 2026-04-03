@@ -11,7 +11,7 @@ namespace LiveChatServer.Tests
         public async Task SetTyping_ForKnownConnection_SetsStateAndReturnsUsername()
         {
             var cm = new ConnectionManager();
-            var dummy = WebSocket.CreateClientWebSocket();
+            var dummy = new ClientWebSocket();
 
             await cm.AddConnectionAsync("c1", dummy);
             await cm.SetUsernameAsync("c1", "alice");
@@ -43,7 +43,7 @@ namespace LiveChatServer.Tests
         public async Task RemoveConnection_ClearsTypingState()
         {
             var cm = new ConnectionManager();
-            var dummy = WebSocket.CreateClientWebSocket();
+            var dummy = new ClientWebSocket();
 
             await cm.AddConnectionAsync("c2", dummy);
             await cm.SetUsernameAsync("c2", "bob");

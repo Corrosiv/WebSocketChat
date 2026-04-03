@@ -5,11 +5,11 @@ using Xunit;
 
 namespace LiveChatServer.Tests
 {
-    public class MessagesIntegrationTests : IClassFixture<WebApplicationFactory<LiveChatServer.Program>>
+    public class MessagesIntegrationTests : IClassFixture<IsolatedChatAppFactory>
     {
-        private readonly WebApplicationFactory<LiveChatServer.Program> _factory;
+        private readonly IsolatedChatAppFactory _factory;
 
-        public MessagesIntegrationTests(WebApplicationFactory<LiveChatServer.Program> factory)
+        public MessagesIntegrationTests(IsolatedChatAppFactory factory)
         {
             _factory = factory;
         }

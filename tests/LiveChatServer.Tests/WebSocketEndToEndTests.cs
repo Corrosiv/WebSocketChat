@@ -9,11 +9,11 @@ using Xunit;
 
 namespace LiveChatServer.Tests
 {
-    public class WebSocketEndToEndTests : IClassFixture<WebApplicationFactory<LiveChatServer.Program>>
+    public class WebSocketEndToEndTests : IClassFixture<IsolatedChatAppFactory>
     {
-        private readonly WebApplicationFactory<LiveChatServer.Program> _factory;
+        private readonly IsolatedChatAppFactory _factory;
 
-        public WebSocketEndToEndTests(WebApplicationFactory<LiveChatServer.Program> factory)
+        public WebSocketEndToEndTests(IsolatedChatAppFactory factory)
         {
             _factory = factory;
         }
@@ -21,11 +21,8 @@ namespace LiveChatServer.Tests
         [Fact]
         public async Task ConnectJoinSend_StoresMessageAndBroadcasts()
         {
-            using var client = _factory.CreateDefaultClient();
-            var uri = new Uri(client.BaseAddress, "/ws");
-
-            using var ws = new ClientWebSocket();
-            await ws.ConnectAsync(uri, CancellationToken.None);
+            var wsClient = _factory.Server.CreateWebSocketClient();
+            using var ws = await wsClient.ConnectAsync(new Uri("ws://localhost/ws"), CancellationToken.None);
 
             // Send join
             var join = JsonSerializer.Serialize(new { type = "join", username = "e2e" });
