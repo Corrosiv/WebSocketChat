@@ -12,10 +12,10 @@ Returns paginated message history, newest first within each page, ordered chrono
 
 **Query parameters**
 
-| Param    | Type | Default | Description                        |
-|----------|------|---------|------------------------------------|
-| `limit`  | int  | 50      | Maximum number of messages to return |
-| `offset` | int  | 0       | Number of messages to skip (from newest) |
+| Param    | Type | Default | Constraints | Description                        |
+|----------|------|---------|-------------|------------------------------------|
+| `limit`  | int  | 50      | 0–200       | Maximum number of messages to return |
+| `offset` | int  | 0       | ≥ 0         | Number of messages to skip (from newest) |
 
 **Example request**
 
@@ -73,7 +73,8 @@ GET /api/messages?limit=2&offset=0
 | Code | Meaning              |
 |------|----------------------|
 | 200  | Success              |
-| 500  | Unexpected server error |
+| 400  | Invalid query parameter (`limit` out of 0–200 range, or negative `offset`). Returns `ApiErrorDto`. |
+| 500  | Unexpected server error. Returns `ApiErrorDto` (via global exception middleware). |
 
 ---
 
@@ -187,15 +188,18 @@ The server does not currently send error frames back to the client over WebSocke
 
 ### HTTP errors
 
-Unhandled exceptions return the default ASP.NET Core error response. A structured error DTO is available for future use:
+All `/api` routes return structured JSON errors using `ApiErrorDto`.
+
+- **Validation failures** (e.g., `limit` out of range, negative `offset`) return `400 Bad Request` with codes like `invalid_limit` or `invalid_offset`.
+- **Unhandled exceptions** on `/api` routes are caught by global exception middleware (`ApiExceptionMiddleware`) and return `500 Internal Server Error` with code `internal_error`.
 
 **`ApiErrorDto` shape**
 
 ```json
 {
-  "code": "error",
-  "message": "A human-readable description.",
-  "details": "Optional additional context or null."
+  "code": "invalid_limit",
+  "message": "Limit must be between 0 and 200.",
+  "details": null
 }
 ```
 

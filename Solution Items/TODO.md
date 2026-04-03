@@ -103,8 +103,8 @@ Acceptance Criteria
 
 ### Task group D — API consistency (code)
 
-- [ ] D1. Review `MessagesController` and ensure error responses use `ApiErrorDto` for invalid query parameters (e.g., negative limit/offset).
-- [ ] D2. Add a simple global exception handler or middleware that returns `ApiErrorDto` JSON instead of the default HTML error page for API routes.
+- [x] D1. Review `MessagesController` and ensure error responses use `ApiErrorDto` for invalid query parameters (e.g., negative limit/offset).
+- [x] D2. Add a simple global exception handler or middleware that returns `ApiErrorDto` JSON instead of the default HTML error page for API routes.
 
 Done criteria
 - CI passes on a push to `dev` and a PR to `main`; test failures break the build.
