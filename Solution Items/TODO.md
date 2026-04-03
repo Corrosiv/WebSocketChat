@@ -72,17 +72,44 @@ Done criteria
 Duration: 1 week
 
 Acceptance Criteria
-- HTTP API is documented and returns consistent JSON shapes.
-- Repo is easy to build and run for reviewers.
+- HTTP API is documented with request/response examples, error shapes, and all current endpoints/WS message types.
+- CI pipeline builds and runs tests on every push and PR; test failures break the build.
+- Repo is easy to clone, build, run, and debug for a new reviewer following just the README.
+- Project documentation is accurate and reflects the current state of the codebase.
 
-Tasks
-- Complete `API-SPEC.md` with request/response examples and error codes.
-- Add Postman/HTTP collection or curl examples in `Solution Items/run.md` (optional).
-- Add contribution notes to `README.md` and include code style / minimal PR checklist.
-- Create simple VS / dotnet debug instructions.
+### Task group A — CI & repo hygiene
+
+- [x] A1. Fix CI workflow: add `dev` to push/PR triggers; remove `|| true` so test failures break the build; update `actions/setup-dotnet` to v4.
+- [x] A2. Add root `.editorconfig` with basic C# formatting rules (indentation, namespace style, etc.) so contributors get consistent formatting without relying on generated files.
+- [x] A3. Add a `LICENSE` file (MIT) to the repo root.
+- [x] A4. Remove stale `PULL_REQUEST_DRAFT.md` from repo root (sprint-specific; no longer needed after merge).
+- [x] A5. Fix `CONTRIBUTING.md`: remove reference to non-existent `SECURITY.md`; fix editorconfig reference to point to the new root `.editorconfig` instead of the generated one in `obj/`.
+
+### Task group B — API-SPEC.md rewrite
+
+- [ ] B1. Document current HTTP endpoints: `GET /api/messages?limit={n}&offset={n}` with full request/response examples, status codes, and the `PagedResponse<T>` shape.
+- [ ] B2. Document all WebSocket message types (client → server and server → client): `join`, `message`, `typing`, `leave` — with JSON payload examples for each.
+- [ ] B3. Document error handling: what happens on malformed JSON, missing fields, unknown message types. Include the `ApiErrorDto` shape.
+- [ ] B4. Remove stale/planned items that were never implemented (`history_request`, `POST /api/messages`).
+
+### Task group C — README & docs refresh
+
+- [ ] C1. Add "Debug in Visual Studio" section to README: how to set the startup project, launch profile, and attach to the running server.
+- [ ] C2. Add "Debug with CLI" section: `dotnet run` + `dotnet watch` instructions.
+- [ ] C3. Add link to `CONTRIBUTING.md` in README.
+- [ ] C4. Update `Solution Items/system-overview.md`: move typing indicators from "Planned" to "Implemented"; add connection lifecycle and structured logging to the feature list.
+- [ ] C5. Update `Solution Items/domain-model.md`: mention the pagination overload on `IMessageRepository` and the typing state tracked in `ConnectionManager`.
+- [ ] C6. Update `Solution Items/database-design.md`: add the `GetRecentMessagesAsync(limit, offset)` overload and `GetTotalCountAsync` to the repository interface section.
+
+### Task group D — API consistency (code)
+
+- [ ] D1. Review `MessagesController` and ensure error responses use `ApiErrorDto` for invalid query parameters (e.g., negative limit/offset).
+- [ ] D2. Add a simple global exception handler or middleware that returns `ApiErrorDto` JSON instead of the default HTML error page for API routes.
 
 Done criteria
-- A new reviewer can clone the repo and run the project following the README.
+- CI passes on a push to `dev` and a PR to `main`; test failures break the build.
+- A new reviewer can clone the repo, follow the README, and have the project running and debuggable within minutes.
+- `API-SPEC.md` accurately describes every endpoint and WebSocket message type with examples.
 
 ---
 
@@ -90,11 +117,10 @@ Done criteria
 Duration: 1-2 weeks
 
 Acceptance Criteria
-- Message history is paginated and retrievable.
 - File/image sending is supported at a prototype level.
+- (Pagination was completed in Sprint 2.)
 
 Tasks
-- Add pagination support for GET `/api/messages` (offset/limit or cursor-based).
 - Prototype file upload flow (HTTP upload + broadcast message with file metadata).
 - Consider storing files locally or as base64 in DB for prototype (choose simplest workable approach).
 - Add tests and examples for file flow.
@@ -108,14 +134,6 @@ Tasks
 - Client: add visual distinction for system messages vs user messages.
 - UI-level integration tests (headless browser or simulated DOM) for key UX flows.
 - Chat rooms / channels (rooms identified in messages and connections).
-- Private messaging and direct message threads.
-- Authentication (JWT/Identity) and persistent users.
-- Presence and online users list with heartbeats.
-- Message edits and deletions.
-- Horizontal scaling: message broker (Redis/SignalR/NGINX PubSub) and sticky sessions.
-- Rich text / emojis / markdown support in messages.
-- Export of message history (CSV/JSON).
-- CI pipeline with tests and build verification.
 
 ---
 

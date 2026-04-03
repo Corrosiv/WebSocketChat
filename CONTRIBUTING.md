@@ -38,11 +38,11 @@ Pull requests
 - Keep PRs focused and include a short description and verification steps.
 
 Code style & quality
-- Follow rules in `LiveChatServer.GeneratedMSBuildEditorConfig.editorconfig`.
+- Follow the root `.editorconfig` for formatting (indentation, namespace style, etc.).
 - Keep changes small and well-documented. Add or update docs under `Solution Items/` when behavior or APIs change.
 
 Issues & security
 - Open issues for bugs and enhancements; tag with appropriate labels.
-- For security issues, follow the guidance in `SECURITY.md` (if present) or contact the repo owner privately.
+- For security concerns, contact the repo owner privately.
 
 Thank you — contributions and reviews are welcome. If unsure, open an issue or a draft PR to start the discussion.
