@@ -22,23 +22,26 @@ This is not intended to be production-ready, but it is designed with extensibili
 
 ---
 
-## 3. MVP Features
+## 3. Implemented Features
 
 ### Core Functionality
 - Establish WebSocket connections
 - Send messages from client to server
 - Broadcast messages to all connected clients
 - Display messages with username distinction
-- Message persistence (MVP)
+- Message persistence (SQLite)
+- Paginated message history (`GET /api/messages?limit=&offset=`)
+
+### UX & Reliability
+- Typing indicators (client sends `typing` events; server broadcasts; client displays "user is typing...")
+- Connection lifecycle: graceful close handling, leave-event broadcast on disconnect, error cleanup
+- Structured logging (`ILogger<T>` with `{ConnectionId}`, `{Username}`, `{RemoteIp}`)
 
 ---
 
 ## 4. Planned Features (V1)
 
-These are not required for MVP, but part of the first full version:
-
-- Typing indicators
-- File/image sending
+- File/image sending (prototype)
 
 ---
 
@@ -96,7 +99,8 @@ Handles:
 Responsible for:
 - Tracking active connections
 - Mapping connections to usernames
-- Broadcasting messages
+- Tracking per-connection typing state
+- Broadcasting messages to all connected clients
 
 ### 8.3 Message Handler
 Handles:
@@ -107,7 +111,8 @@ Handles:
 ### 8.4 Domain Models
 
 Example:
-n    class ChatMessage
+
+n    class ChatMessage
     {
         public string Username { get; set; }
         public string Content { get; set; }
@@ -135,9 +140,10 @@ Example:
 
 ## 10. Testing Strategy
 
-- Browser-based test client (HTML + JavaScript)
-- Console logging for debugging
-- Optional CLI tools for WebSocket testing
+- Automated tests (xUnit): unit, integration, and WebSocket E2E tests
+- Per-test SQLite isolation via `IsolatedChatAppFactory`
+- CI pipeline runs tests on every push and PR
+- Browser-based test client (HTML + JavaScript) for manual verification
 
 ---
 

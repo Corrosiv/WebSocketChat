@@ -13,9 +13,11 @@ Using SQLite for persistence in MVP. Keep schema minimal and easy to migrate.
 Indexes:
 - `IX_Messages_Timestamp` on `Timestamp` for efficient recent queries
 
-Migration notes:
-- Use a simple repository interface `IMessageRepository` with methods:
-  - `Task AddMessageAsync(ChatMessage message)`
-  - `Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit)`
+## Repository interface — `IMessageRepository`
+
+- `Task AddMessageAsync(ChatMessage message)`
+- `Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit)` — returns the `limit` most recent messages in chronological order
+- `Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit, int offset)` — paginated: skips `offset` newest rows, takes `limit`, returns in chronological order
+- `Task<int> GetTotalCountAsync()` — total row count (used for `PagedResponse.Total`)
 
 Keep the data access layer abstract to allow replacing SQLite later.

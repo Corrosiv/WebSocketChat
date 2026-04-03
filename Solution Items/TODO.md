@@ -94,12 +94,12 @@ Acceptance Criteria
 
 ### Task group C — README & docs refresh
 
-- [ ] C1. Add "Debug in Visual Studio" section to README: how to set the startup project, launch profile, and attach to the running server.
-- [ ] C2. Add "Debug with CLI" section: `dotnet run` + `dotnet watch` instructions.
-- [ ] C3. Add link to `CONTRIBUTING.md` in README.
-- [ ] C4. Update `Solution Items/system-overview.md`: move typing indicators from "Planned" to "Implemented"; add connection lifecycle and structured logging to the feature list.
-- [ ] C5. Update `Solution Items/domain-model.md`: mention the pagination overload on `IMessageRepository` and the typing state tracked in `ConnectionManager`.
-- [ ] C6. Update `Solution Items/database-design.md`: add the `GetRecentMessagesAsync(limit, offset)` overload and `GetTotalCountAsync` to the repository interface section.
+- [x] C1. Add "Debug in Visual Studio" section to README: how to set the startup project, launch profile, and attach to the running server.
+- [x] C2. Add "Debug with CLI" section: `dotnet run` + `dotnet watch` instructions.
+- [x] C3. Add link to `CONTRIBUTING.md` in README.
+- [x] C4. Update `Solution Items/system-overview.md`: move typing indicators from "Planned" to "Implemented"; add connection lifecycle and structured logging to the feature list.
+- [x] C5. Update `Solution Items/domain-model.md`: mention the pagination overload on `IMessageRepository` and the typing state tracked in `ConnectionManager`.
+- [x] C6. Update `Solution Items/database-design.md`: add the `GetRecentMessagesAsync(limit, offset)` overload and `GetTotalCountAsync` to the repository interface section.
 
 ### Task group D — API consistency (code)
 
