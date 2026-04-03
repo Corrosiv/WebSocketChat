@@ -21,7 +21,7 @@ namespace LiveChatServer.Tests
         public async Task RemoveConnection_RemovesUsernameMapping()
         {
             var cm = new ConnectionManager();
-            var dummy = WebSocket.CreateClientWebSocket();
+            var dummy = new ClientWebSocket();
 
             await cm.AddConnectionAsync("1", dummy);
             await cm.SetUsernameAsync("1", "alice");

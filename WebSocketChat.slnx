@@ -1,3 +1,6 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/LiveChatServer.Tests/LiveChatServer.Tests.csproj" />
+  </Folder>
   <Project Path="LiveChatServer/LiveChatServer.csproj" />
 </Solution>

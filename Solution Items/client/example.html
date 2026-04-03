@@ -3,19 +3,89 @@
 <head>
   <meta charset="utf-8" />
   <title>Live Chat - Test Client</title>
+  <style>
+    /* Spinner and skeleton styles for message history loading */
+    #historyLoading { display: none; align-items: center; gap: 8px; }
+    .spinner { width: 16px; height: 16px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .skeleton { background: #eee; height: 14px; margin: 6px 0; border-radius: 4px; }
+    .skeleton.wave { background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%); background-size: 200% 100%; animation: wave 1.5s linear infinite; }
+    @keyframes wave { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+
+    /* Message type distinction */
+    .msg-system {
+      font-style: italic;
+      color: #666;
+      background: #f9f9f9;
+      padding: 2px 6px;
+      border-left: 3px solid #bbb;
+      margin: 3px 0;
+      font-size: 0.92em;
+    }
+    .msg-user {
+      padding: 2px 6px;
+      margin: 3px 0;
+    }
+    .msg-user .msg-username {
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .msg-user .msg-ts {
+      color: #999;
+      font-size: 0.85em;
+    }
+  </style>
 </head>
 <body>
   <h3>Live Chat Test Client</h3>
   <label>Username: <input id="username" /></label>
   <label>Server WS URL: <input id="serverUrl" value="ws://localhost:5223/ws" style="width:220px" /></label>
   <button id="connect">Connect</button>
-  <div id="status"></div>
+  <button id="disconnect" disabled>Disconnect</button>
+  <button id="loadMore" style="display:none; margin-left:8px">Load older</button>
+  <button id="retry" style="display:none">Retry</button>
+  <div id="status">Disconnected</div>
   <div id="messages" style="border:1px solid #ccc; padding:8px; height:300px; overflow:auto;"></div>
-  <input id="message" placeholder="Type message..." />
-  <button id="send">Send</button>
+  <div id="historyLoading" style="font-size:12px; color:#666; margin:6px 0; display:none">
+    <svg class="spinner" viewBox="0 0 50 50" aria-hidden="true" focusable="false">
+      <circle cx="25" cy="25" r="20" fill="none" stroke="#666" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4 31.4"></circle>
+    </svg>
+    <span>Loading message history…</span>
+  </div>
+  <div id="typing" style="font-style:italic; color:#666; margin-top:6px"></div>
+  <div style="margin-top:6px">
+    <input id="message" placeholder="Type message..." disabled />
+    <button id="send" disabled>Send</button>
+  </div>
 
   <script>
     let ws;
+    let historyLimit = 50;
+    let historyOffset = 0;
+    let historyTotal = 0;
+
+    // --- Helpers ---
+    function isScrolledToBottom(el) {
+      return el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+    }
+
+    function formatTimestamp(raw) {
+      if (!raw) return '';
+      try {
+        const d = new Date(raw);
+        if (isNaN(d.getTime())) return raw;
+        return d.toLocaleString();
+      } catch { return raw; }
+    }
+
+    function setConnectedUi(connected) {
+      document.getElementById('message').disabled = !connected;
+      document.getElementById('send').disabled = !connected;
+      document.getElementById('connect').disabled = connected;
+      document.getElementById('disconnect').disabled = !connected;
+      if (connected) document.getElementById('message').focus();
+    }
     document.getElementById('connect').addEventListener('click', () => {
       const username = document.getElementById('username').value || 'anon';
       const serverUrlInput = document.getElementById('serverUrl').value;
@@ -26,37 +96,179 @@
         document.getElementById('status').innerText = `Connection error: ${err}`;
         return;
       }
-      ws.onopen = () => {
+      ws.onopen = async () => {
         document.getElementById('status').innerText = 'Connected';
+        setConnectedUi(true);
+        // Load recent message history from the HTTP API and render as initial chat state
+        try {
+          // derive HTTP base from WS url (ws://host[:port]/ws -> http://host[:port])
+          const serverUrlInput = document.getElementById('serverUrl').value;
+          const wsBase = serverUrlInput && serverUrlInput.length > 0 ? serverUrlInput : `ws://${location.host}/ws`;
+          const httpBase = wsBase.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:').replace(/\/ws\/?$/i, '');
+          const resp = await fetch(httpBase + `/api/messages?limit=${historyLimit}&offset=${historyOffset}`);
+          if (resp.ok) {
+            const page = await resp.json();
+            // clear existing messages area and render history
+            const container = document.getElementById('messages');
+            const loadMoreBtn = document.getElementById('loadMore');
+            container.innerHTML = '';
+            const items = page.items || page.Items || [];
+            historyTotal = page.total || page.Total || 0;
+            // render items in natural order (oldest->newest) for initial load
+            items.forEach(m => renderMessage(m, /*isHistory*/ true));
+            // show load more button if there are older messages
+            if ((historyOffset + items.length) < historyTotal) {
+              loadMoreBtn.style.display = 'inline-block';
+            } else {
+              loadMoreBtn.style.display = 'none';
+            }
+            // prepare offset for next (older) page
+            historyOffset += historyLimit;
+          }
+        } catch (err) {
+          console.warn('Failed to load message history', err);
+        }
+
         // Announce username to the server using a join message
         const join = { type: 'join', username };
         ws.send(JSON.stringify(join));
       };
       ws.onerror = (ev) => {
         document.getElementById('status').innerText = 'WebSocket error';
+        setConnectedUi(false);
       };
       ws.onclose = () => {
         document.getElementById('status').innerText = 'Closed';
+        setConnectedUi(false);
       };
       ws.onmessage = e => {
         try {
           const m = JSON.parse(e.data);
-          const el = document.createElement('div');
-          el.textContent = `[${m.timestamp || ''}] ${m.username || ''}: ${m.content || JSON.stringify(m)}`;
-          document.getElementById('messages').appendChild(el);
+          renderMessage(m, /*isHistory*/ false);
         } catch (ex) {
           console.warn('Failed to parse message', ex, e.data);
         }
       };
     });
 
-    document.getElementById('send').addEventListener('click', () => {
-      const content = document.getElementById('message').value;
+    function sendMessage() {
+      const msgInput = document.getElementById('message');
+      const content = msgInput.value.trim();
+      if (!content) return;
       const username = document.getElementById('username').value || 'anon';
-      if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Not connected');
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
       const payload = { type: 'message', username, content };
       ws.send(JSON.stringify(payload));
+      msgInput.value = '';
+      msgInput.focus();
+    }
+
+    document.getElementById('send').addEventListener('click', sendMessage);
+
+    // Enter-to-send
+    document.getElementById('message').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
+
+    // typing indicator: send typing events while the user types
+    let typingTimer;
+    const typingEl = document.getElementById('typing');
+    document.getElementById('message').addEventListener('input', () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      // send typing=true
+      const username = document.getElementById('username').value || 'anon';
+      ws.send(JSON.stringify({ type: 'typing', username, isTyping: true }));
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        ws.send(JSON.stringify({ type: 'typing', username, isTyping: false }));
+      }, 1000);
+    });
+
+    document.getElementById('disconnect').addEventListener('click', () => {
+      if (ws) { ws.close(); ws = null; }
+    });
+
+    function renderMessage(m, isHistory) {
+      const el = document.createElement('div');
+      const ts = formatTimestamp(m.timestamp || m.Timestamp);
+      if (m.type === 'join') {
+        el.className = 'msg-system';
+        el.textContent = `[${ts}] \u2192 ${m.username} joined`;
+      } else if (m.type === 'leave') {
+        el.className = 'msg-system';
+        el.textContent = `[${ts}] \u2190 ${m.username} left`;
+      } else if (m.type === 'message') {
+        el.className = 'msg-user';
+        const tsSpan = document.createElement('span');
+        tsSpan.className = 'msg-ts';
+        tsSpan.textContent = `[${ts}] `;
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'msg-username';
+        nameSpan.textContent = `${m.username || 'unknown'}: `;
+        el.appendChild(tsSpan);
+        el.appendChild(nameSpan);
+        el.appendChild(document.createTextNode(m.content || JSON.stringify(m)));
+      } else if (m.type === 'typing') {
+        // typing events are displayed in the typing region rather than messages list
+        const typingEl = document.getElementById('typing');
+        if (m.isTyping) {
+          typingEl.textContent = `${m.username} is typing...`;
+        } else {
+          if (typingEl.textContent && typingEl.textContent.startsWith(m.username)) {
+            typingEl.textContent = '';
+          }
+        }
+        return;
+      } else {
+        el.textContent = JSON.stringify(m);
+      }
+
+      // if rendering history, insert at top; otherwise append
+      const container = document.getElementById('messages');
+      if (isHistory) {
+        // show older messages first; insert before first child
+        if (container.firstChild) container.insertBefore(el, container.firstChild);
+        else container.appendChild(el);
+      } else {
+        // only auto-scroll if user is already at the bottom
+        const wasAtBottom = isScrolledToBottom(container);
+        container.appendChild(el);
+        if (wasAtBottom) container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    // load older messages when requested
+    document.getElementById('loadMore').addEventListener('click', async () => {
+      const loadMoreBtn = document.getElementById('loadMore');
+      const loadingEl = document.getElementById('historyLoading');
+      const container = document.getElementById('messages');
+      loadingEl.style.display = 'flex';
+      try {
+        const serverUrlInput = document.getElementById('serverUrl').value;
+        const wsBase = serverUrlInput && serverUrlInput.length > 0 ? serverUrlInput : `ws://${location.host}/ws`;
+        const httpBase = wsBase.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:').replace(/\/ws\/?$/i, '');
+        const resp = await fetch(httpBase + `/api/messages?limit=${historyLimit}&offset=${historyOffset}`);
+        if (resp.ok) {
+          const page = await resp.json();
+          const items = page.items || page.Items || [];
+          // insert older messages above existing; iterate in reverse so order remains oldest->newest
+          for (let i = items.length - 1; i >= 0; i--) {
+            renderMessage(items[i], /*isHistory*/ true);
+          }
+          historyTotal = page.total || page.Total || historyTotal;
+          historyOffset += historyLimit;
+          if ((historyOffset) >= historyTotal) loadMoreBtn.style.display = 'none';
+        }
+      } catch (err) {
+        console.warn('Failed to load older messages', err);
+      } finally {
+        loadingEl.style.display = 'none';
+      }
+    });
+
+    // initialize UI state
+    document.getElementById('status').innerText = 'Disconnected';
+    setConnectedUi(false);
   </script>
 </body>
 </html>

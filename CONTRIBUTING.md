@@ -16,8 +16,24 @@ Branching & workflow
 - When a sprint or feature is complete, open a PR from your branch into `dev` for review.
 - When `dev` reaches a stable sprint state, open a PR from `dev` → `main`.
 
+Commit messages
+- Follow [Conventional Commits](https://www.conventionalcommits.org/) format: `type(scope): description`.
+- Use **lowercase**, **imperative mood**, and keep the subject line under ~72 characters.
+- Common types:
+  - `feat` — new feature or user-facing behavior
+  - `fix` — bug fix
+  - `test` — adding or updating tests
+  - `refactor` — code restructuring without behavior change
+  - `chore` — tooling, docs, CI, dependency updates
+- Scope is optional but encouraged (e.g., `feat(client):`, `test(typing):`).
+- Examples:
+  - `feat(client): load recent message history on connect`
+  - `test: add per-test SQLite isolation and include test project in solution`
+  - `chore: complete Sprint 1 MVP (#1)`
+
 Pull requests
 - Use the provided PR template (`.github/PULL_REQUEST_TEMPLATE.md`).
+- PR title should follow the same Conventional Commits format as commit messages.
 - Ensure CI passes and at least one reviewer approves before merging into `main`.
 - Keep PRs focused and include a short description and verification steps.
 

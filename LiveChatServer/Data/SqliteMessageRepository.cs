@@ -68,6 +68,42 @@ namespace LiveChatServer.Data
             return list;
         }
 
+        public async Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(int limit, int offset)
+        {
+            var list = new List<ChatMessage>();
+            using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT Id, Username, Content, Timestamp FROM Messages ORDER BY Id DESC LIMIT $l OFFSET $o;";
+            cmd.Parameters.AddWithValue("$l", limit);
+            cmd.Parameters.AddWithValue("$o", offset);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var msg = new ChatMessage
+                {
+                    Id = reader.GetInt32(0),
+                    Username = reader.GetString(1),
+                    Content = reader.GetString(2),
+                    Timestamp = DateTime.Parse(reader.GetString(3))
+                };
+                list.Add(msg);
+            }
+            // Return in chronological order (oldest first)
+            list.Reverse();
+            return list;
+        }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(1) FROM Messages;";
+            var val = await cmd.ExecuteScalarAsync();
+            return Convert.ToInt32(val);
+        }
+
         public void Dispose()
         {
             // Nothing to dispose for now. Placeholder for future resources.
