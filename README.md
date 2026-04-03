@@ -56,6 +56,34 @@ Repository layout (high-level):
 - `tests/LiveChatServer.Tests/` - unit and integration tests (xUnit)
 - `Solution Items/` - project documentation and small tooling files (system overview, API spec, TODO, database design)
 
+Debugging
+---------
+
+### Visual Studio
+
+1. Open `WebSocketChat.slnx` in Visual Studio.
+2. Set **LiveChatServer** as the startup project (right-click → Set as Startup Project).
+3. Press **F5** (or Debug → Start Debugging). The `http` launch profile starts the server on `http://localhost:5223`.
+4. Breakpoints work in `WebSocketMiddleware`, `MessageHandler`, `ConnectionManager`, etc.
+
+### CLI
+
+Run with hot-reload (restarts on file changes):
+
+```powershell
+dotnet watch --project LiveChatServer
+```
+
+Or run without hot-reload:
+
+```powershell
+dotnet run --project LiveChatServer
+```
+
+Contributing
+------------
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branching, commit message conventions, and PR guidelines.
+
 Notes for reviewers:
 - This is a portfolio prototype aimed at demonstrating clean architecture and WebSocket fundamentals.
 - Message persistence is part of the MVP (SQLite).

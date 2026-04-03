@@ -15,8 +15,26 @@ namespace LiveChatServer.Controllers
         public MessagesController(IMessageRepository repo) => _repo = repo;
 
         [HttpGet]
-        public async Task<PagedResponse<MessageDto>> Get([FromQuery] int limit = 50, [FromQuery] int offset = 0)
+        public async Task<IActionResult> Get([FromQuery] int limit = 50, [FromQuery] int offset = 0)
         {
+            if (limit < 0 || limit > 200)
+            {
+                return BadRequest(new ApiErrorDto
+                {
+                    Code = "invalid_limit",
+                    Message = "Limit must be between 0 and 200."
+                });
+            }
+
+            if (offset < 0)
+            {
+                return BadRequest(new ApiErrorDto
+                {
+                    Code = "invalid_offset",
+                    Message = "Offset must be 0 or greater."
+                });
+            }
+
             var msgs = await _repo.GetRecentMessagesAsync(limit, offset);
             var total = await _repo.GetTotalCountAsync();
 
@@ -34,13 +52,13 @@ namespace LiveChatServer.Controllers
                 });
             }
 
-            return new PagedResponse<MessageDto>
+            return Ok(new PagedResponse<MessageDto>
             {
                 Items = list,
                 Total = total,
                 Limit = limit,
                 Offset = offset
-            };
+            });
         }
     }
 }

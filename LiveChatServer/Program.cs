@@ -1,4 +1,5 @@
 using LiveChatServer.Data;
+using LiveChatServer.Middleware;
 using LiveChatServer.Services;
 using LiveChatServer.WebSockets;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,9 @@ builder.Services.AddSingleton<IMessageHandler, MessageHandler>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// Return JSON errors for /api routes instead of default HTML error pages
+app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseWebSockets();
 app.MapControllers();
