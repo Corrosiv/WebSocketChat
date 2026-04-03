@@ -87,10 +87,10 @@ Acceptance Criteria
 
 ### Task group B — API-SPEC.md rewrite
 
-- [ ] B1. Document current HTTP endpoints: `GET /api/messages?limit={n}&offset={n}` with full request/response examples, status codes, and the `PagedResponse<T>` shape.
-- [ ] B2. Document all WebSocket message types (client → server and server → client): `join`, `message`, `typing`, `leave` — with JSON payload examples for each.
-- [ ] B3. Document error handling: what happens on malformed JSON, missing fields, unknown message types. Include the `ApiErrorDto` shape.
-- [ ] B4. Remove stale/planned items that were never implemented (`history_request`, `POST /api/messages`).
+- [x] B1. Document current HTTP endpoints: `GET /api/messages?limit={n}&offset={n}` with full request/response examples, status codes, and the `PagedResponse<T>` shape.
+- [x] B2. Document all WebSocket message types (client → server and server → client): `join`, `message`, `typing`, `leave` — with JSON payload examples for each.
+- [x] B3. Document error handling: what happens on malformed JSON, missing fields, unknown message types. Include the `ApiErrorDto` shape.
+- [x] B4. Remove stale/planned items that were never implemented (`history_request`, `POST /api/messages`).
 
 ### Task group C — README & docs refresh
 
