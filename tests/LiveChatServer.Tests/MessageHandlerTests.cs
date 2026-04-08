@@ -66,7 +66,7 @@ namespace LiveChatServer.Tests
             public int Count => 0;
             public Task AddConnectionAsync(string id, WebSocket socket) => Task.CompletedTask;
             public Task RemoveConnectionAsync(string id) => Task.CompletedTask;
-            public Task BroadcastAsync(string message)
+            public Task BroadcastAsync(string message, System.Threading.CancellationToken cancellationToken = default)
             {
                 SentMessages.Add(message);
                 return Task.CompletedTask;

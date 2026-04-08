@@ -22,7 +22,60 @@ This is not intended to be production-ready, but it is designed with extensibili
 
 ---
 
-## 3. Implemented Features
+## 3. Getting Started
+
+### Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- Visual Studio 2026 (recommended) or `dotnet` CLI
+
+### Run the server
+
+From the repo root:
+
+```powershell
+dotnet run --project LiveChatServer
+```
+
+The console will print the URL (e.g. `http://localhost:5223`). The WebSocket endpoint is at `/ws`.
+
+### Run with hot-reload
+
+```powershell
+dotnet watch --project LiveChatServer
+```
+
+### Open the browser client
+
+1. Start the server (see above) and note the port.
+2. Serve the client folder with any static file server:
+
+```powershell
+cd "Solution Items/client"
+python -m http.server 8000
+```
+
+3. Open `http://localhost:8000/example.html` in a browser.
+
+Alternatively, open `example.html` directly and edit the WebSocket URL in the file to match the server port.
+
+### Run tests
+
+```powershell
+dotnet test
+```
+
+### Debug in Visual Studio
+
+1. Open `WebSocketChat.slnx`.
+2. Set **LiveChatServer** as the startup project.
+3. Press **F5**. The `http` launch profile starts on `http://localhost:5223`.
+
+> For full details see the [README](../README.md).
+
+---
+
+## 4. Implemented Features
 
 ### Core Functionality
 - Establish WebSocket connections
@@ -39,13 +92,13 @@ This is not intended to be production-ready, but it is designed with extensibili
 
 ---
 
-## 4. Planned Features (V1)
+## 5. Planned Features (V1)
 
 - File/image sending (prototype)
 
 ---
 
-## 5. Future Features (V2+)
+## 6. Future Features (V2+)
 
 - Chat rooms
 - Private messaging
@@ -54,7 +107,7 @@ This is not intended to be production-ready, but it is designed with extensibili
 
 ---
 
-## 6. High-Level Architecture
+## 7. High-Level Architecture
 
     [ Browser Test Client ]
                |
@@ -73,7 +126,7 @@ This is not intended to be production-ready, but it is designed with extensibili
 
 ---
 
-## 7. Technology Stack
+## 8. Technology Stack
 
 ### Backend
 - ASP.NET Core
@@ -87,28 +140,28 @@ This is not intended to be production-ready, but it is designed with extensibili
 
 ---
 
-## 8. Core Components
+## 9. Core Components
 
-### 8.1 WebSocket Server Layer
+### 9.1 WebSocket Server Layer
 Handles:
 - Accepting connections
 - Managing connection lifecycle
 - Receiving and sending raw messages
 
-### 8.2 Connection Manager
+### 9.2 Connection Manager
 Responsible for:
 - Tracking active connections
 - Mapping connections to usernames
 - Tracking per-connection typing state
 - Broadcasting messages to all connected clients
 
-### 8.3 Message Handler
+### 9.3 Message Handler
 Handles:
 - Parsing incoming messages (JSON)
 - Routing messages (broadcast, future: private)
 - Triggering events (typing, etc.)
 
-### 8.4 Domain Models
+### 9.4 Domain Models
 
 Example:
 
@@ -119,13 +172,13 @@ n    class ChatMessage
         public DateTime Timestamp { get; set; }
     }
 
-### 8.5 Data Layer
+### 9.5 Data Layer
 - SQLite for persistence
 - Repository pattern to remain database-agnostic
 
 ---
 
-## 9. Data Flow
+## 10. Data Flow
 
 ### Sending a Message
 
@@ -138,7 +191,7 @@ n    class ChatMessage
 
 ---
 
-## 10. Testing Strategy
+## 11. Testing Strategy
 
 - Automated tests (xUnit): unit, integration, and WebSocket E2E tests
 - Per-test SQLite isolation via `IsolatedChatAppFactory`
@@ -147,7 +200,7 @@ n    class ChatMessage
 
 ---
 
-## 11. Design Principles
+## 12. Design Principles
 
 ### Separation of Concerns
 Each layer has a clear responsibility:
@@ -175,7 +228,7 @@ Avoid premature complexity:
 
 ---
 
-## 12. Constraints and Trade-offs
+## 13. Constraints and Trade-offs
 
 - Raw WebSockets increase complexity but improve learning
 - No authentication simplifies early development but limits realism
@@ -183,7 +236,7 @@ Avoid premature complexity:
 
 ---
 
-## 13. Future Improvements
+## 14. Future Improvements
 
 - Introduce authentication (JWT or Identity)
 - Add horizontal scaling (multiple instances and message broker)

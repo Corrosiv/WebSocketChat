@@ -61,6 +61,22 @@ CI pipeline (GitHub Actions on `main`/`dev`), `.editorconfig`, MIT license, `API
 
 ---
 
+## Compatibility & Reuse — Immediate technical tasks
+
+These are prioritized items to make the WebSocket implementation reusable by other projects. Each item is small and actionable so it can be scheduled into a sprint.
+
+- [ ] Fix framing: properly handle fragmented messages and respect `WebSocketReceiveResult.EndOfMessage`. Acceptance criteria: `MessageHandler.ReceiveLoopAsync` assembles frames until `EndOfMessage == true` and supports messages larger than current 4KB buffer.
+- [ ] Add cancellation support: accept and propagate `CancellationToken` into receive/send loops. Acceptance criteria: `HandleAsync` accepts a `CancellationToken` (or uses one from the middleware) and passes it to `ReceiveAsync`/`SendAsync` so tests and hosting shutdown can cancel loops.
+- [ ] Improve broadcast error handling: replace silent swallow with structured logging and optional removal of stale sockets. Acceptance criteria: `ConnectionManager.BroadcastAsync` logs send failures and removes/cleans connections that consistently fail to send (configurable threshold).
+- [ ] Replay/backpressure safeguards: add configurable replay window limits and basic backpressure behavior for `GET /api/messages` and replay endpoints. Acceptance criteria: API returns `429 Too Many Requests` or `400` for excessively large replay requests and server prevents simultaneous large replays from overwhelming memory/CPU.
+- [ ] Add integration tests for large/fragmented messages and cancellation. Acceptance criteria: new tests demonstrate correct reassembly and graceful cancellation.
+
+Notes:
+- These tasks are required before treating this WebSocket layer as a reusable component for other projects (for example, integrating into `RealTimeDashboard`).
+- I recommend tackling framing and cancellation first (high impact, small scope), then broadcast error handling, then replay/backpressure and tests.
+
+---
+
 ## Sprint 4 — Feature expansion (V1)
 Duration: 1-2 weeks
 

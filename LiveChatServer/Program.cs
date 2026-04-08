@@ -1,6 +1,7 @@
 using LiveChatServer.Data;
 using LiveChatServer.Middleware;
 using LiveChatServer.Services;
+using LiveChatServer.Services.Options;
 using LiveChatServer.WebSockets;
 using Microsoft.Extensions.Logging;
 
@@ -21,6 +22,11 @@ builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 builder.Services.AddSingleton<IMessageHandler, MessageHandler>();
 
 builder.Services.AddControllers();
+
+// Bind ConnectionManager options from configuration (appsettings.json)
+builder.Services.Configure<ConnectionManagerOptions>(builder.Configuration.GetSection("ConnectionManager"));
+// Replay/backpressure options
+builder.Services.Configure<LiveChatServer.Services.Options.ReplayOptions>(builder.Configuration.GetSection("Replay"));
 
 var app = builder.Build();
 
