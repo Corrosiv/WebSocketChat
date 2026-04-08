@@ -45,9 +45,9 @@ namespace LiveChatServer.WebSockets
             try
             {
                 // Hand off to the message handler which will process incoming messages
-                // and perform persistence/broadcasting. The handler is expected to remove
-                // the connection on close, but we defensively remove it here as well.
-                await _handler.HandleAsync(connectionId, webSocket);
+                // and perform persistence/broadcasting. Pass the request's cancellation
+                // token so the handler can observe shutdown and client aborts.
+                await _handler.HandleAsync(connectionId, webSocket, context.RequestAborted);
             }
             catch (Exception ex)
             {
@@ -59,23 +59,8 @@ namespace LiveChatServer.WebSockets
             }
             finally
             {
-                // Broadcast a leave/system event if the connection had an associated username
-                try
-                {
-                    var username = _connections.GetUsername(connectionId);
-                    if (!string.IsNullOrEmpty(username))
-                    {
-                        var leaveEvent = System.Text.Json.JsonSerializer.Serialize(new { type = "leave", username, timestamp = DateTime.UtcNow });
-                        await _connections.BroadcastAsync(leaveEvent);
-                        _logger.LogInformation("Broadcasted leave event for {ConnectionId} (user: {Username})", connectionId, username);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to broadcast leave event for {ConnectionId}", connectionId);
-                }
-
-                // Ensure cleanup if the handler did not already remove it
+                // Ensure cleanup if the handler did not already remove it. ConnectionManager
+                // will emit leave events on removal so middleware should not duplicate that.
                 await _connections.RemoveConnectionAsync(connectionId);
                 try { webSocket.Dispose(); } catch { }
                 _logger.LogInformation("Connection {ConnectionId} closed and cleaned up", connectionId);
