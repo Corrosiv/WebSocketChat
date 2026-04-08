@@ -9,8 +9,9 @@ namespace LiveChatServer.Services
         Task RemoveConnectionAsync(string id);
         // Number of active connections (read-only) for monitoring/testing.
         int Count { get; }
-        // Broadcast a text message to all connected clients.
-        Task BroadcastAsync(string message);
+        // Broadcast a text message to all connected clients. Accepts an optional
+        // CancellationToken so callers can cancel sends during shutdown.
+        Task BroadcastAsync(string message, System.Threading.CancellationToken cancellationToken = default);
         // Associate a username with a connection id (join event).
         Task SetUsernameAsync(string connectionId, string username);
         // Get the username associated with a connection id, or null if none.
@@ -23,5 +24,6 @@ namespace LiveChatServer.Services
         bool IsTyping(string connectionId);
         // Get list of usernames currently typing
         string[] GetTypingUsers();
+        // Optionally expose a way to configure/inspect manager options later (placeholder)
     }
 }
