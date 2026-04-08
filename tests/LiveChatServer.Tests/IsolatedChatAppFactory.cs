@@ -16,6 +16,13 @@ namespace LiveChatServer.Tests
     {
         private readonly string _dbName = $"testdb_{Guid.NewGuid():N}";
         private SqliteConnection? _keepAlive;
+        /// <summary>
+        /// When set by a test, this value controls the maximum concurrent replay
+        /// requests allowed by the test host. Defaults to 1 to make contention
+        /// observable in concurrency tests. Tests should set this before calling
+        /// `CreateClient()`.
+        /// </summary>
+        public int TestConcurrentReplayLimit { get; set; } = 1;
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -35,6 +42,12 @@ namespace LiveChatServer.Tests
 
                 services.AddSingleton<IMessageRepository>(
                     _ => new SqliteMessageRepository(connStr));
+
+                // Override the SemaphoreSlim used by the app so tests can control
+                // the level of concurrency. Capture the configured value locally
+                // to avoid closure capture of 'this' during host build.
+                var limit = TestConcurrentReplayLimit;
+                services.AddSingleton<System.Threading.SemaphoreSlim>(_ => new System.Threading.SemaphoreSlim(limit, limit));
             });
         }
 

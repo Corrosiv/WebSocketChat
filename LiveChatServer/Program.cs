@@ -4,6 +4,8 @@ using LiveChatServer.Services;
 using LiveChatServer.Services.Options;
 using LiveChatServer.WebSockets;
 using Microsoft.Extensions.Logging;
+using System.Threading;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,14 @@ builder.Services.AddControllers();
 builder.Services.Configure<ConnectionManagerOptions>(builder.Configuration.GetSection("ConnectionManager"));
 // Replay/backpressure options
 builder.Services.Configure<LiveChatServer.Services.Options.ReplayOptions>(builder.Configuration.GetSection("Replay"));
+
+// Semaphore shared across requests to limit concurrent replay requests.
+builder.Services.AddSingleton<SemaphoreSlim>(sp =>
+{
+    var opts = sp.GetService<IOptions<LiveChatServer.Services.Options.ReplayOptions>>()?.Value;
+    var max = opts?.ConcurrentReplayLimit > 0 ? opts.ConcurrentReplayLimit : 5;
+    return new SemaphoreSlim(max, max);
+});
 
 var app = builder.Build();
 

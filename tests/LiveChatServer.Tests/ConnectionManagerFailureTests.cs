@@ -70,13 +70,13 @@ namespace LiveChatServer.Tests
             public override WebSocketState State => _state;
             public override string SubProtocol => null!;
 
-            public override Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
+            public override Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken)
             {
                 _state = WebSocketState.Closed;
                 return Task.CompletedTask;
             }
 
-            public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
+            public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken)
             {
                 _state = WebSocketState.Closed;
                 return Task.CompletedTask;
@@ -105,13 +105,13 @@ namespace LiveChatServer.Tests
             public override WebSocketState State => _state;
             public override string SubProtocol => null!;
 
-            public override Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
+            public override Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken)
             {
                 _state = WebSocketState.Closed;
                 return Task.CompletedTask;
             }
 
-            public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
+            public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken)
             {
                 _state = WebSocketState.Closed;
                 return Task.CompletedTask;

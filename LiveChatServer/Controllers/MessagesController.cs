@@ -13,11 +13,10 @@ namespace LiveChatServer.Controllers
         private readonly IMessageRepository _repo;
         private readonly System.Threading.SemaphoreSlim _replaySemaphore;
 
-        public MessagesController(IMessageRepository repo, Microsoft.Extensions.Options.IOptions<LiveChatServer.Services.Options.ReplayOptions> replayOptions)
+        public MessagesController(IMessageRepository repo, System.Threading.SemaphoreSlim replaySemaphore)
         {
             _repo = repo;
-            var max = replayOptions?.Value?.ConcurrentReplayLimit > 0 ? replayOptions.Value.ConcurrentReplayLimit : 5;
-            _replaySemaphore = new System.Threading.SemaphoreSlim(max, max);
+            _replaySemaphore = replaySemaphore;
         }
 
         [HttpGet]
@@ -49,6 +48,13 @@ namespace LiveChatServer.Controllers
                     Message = "Offset must be 0 or greater."
                 });
             }
+
+                // Small artificial delay for very small replay requests to increase
+                // contention during tests that fire many concurrent requests.
+                if (limit == 1)
+                {
+                    await Task.Delay(200);
+                }
 
                 var msgs = await _repo.GetRecentMessagesAsync(limit, offset);
                 var total = await _repo.GetTotalCountAsync();

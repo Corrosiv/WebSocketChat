@@ -37,7 +37,7 @@ namespace LiveChatServer.Services
             while (socket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
             {
                 var seg = new ArraySegment<byte>(buffer);
-                WebSocketReceiveResult result = null;
+                WebSocketReceiveResult? result = null;
 
                 try
                 {
@@ -127,7 +127,9 @@ namespace LiveChatServer.Services
                     if (type == "message")
                     {
                         var content = doc.RootElement.GetProperty("content").GetString() ?? string.Empty;
-                        var username = doc.RootElement.TryGetProperty("username", out var u) ? u.GetString() ?? string.Empty : _connections.GetUsername(connectionId) ?? string.Empty;
+                        var username = doc.RootElement.TryGetProperty("username", out var u) 
+                            ? (u.GetString() ?? string.Empty) 
+                            : (_connections.GetUsername(connectionId) ?? string.Empty);
                         var chat = new ChatMessage { Username = username, Content = content, Timestamp = DateTime.UtcNow };
                         await _repo.AddMessageAsync(chat);
                         _logger.LogInformation("Persisted message from {Username}: {Content}", chat.Username, chat.Content);
@@ -149,7 +151,8 @@ namespace LiveChatServer.Services
                         var isTyping = doc.RootElement.TryGetProperty("isTyping", out var tt) ? tt.GetBoolean() : true;
                         // Update connection typing state and broadcast a typing event to others
                         await _connections.SetTypingAsync(connectionId, isTyping);
-                        var username = _connections.GetUsername(connectionId) ?? (doc.RootElement.TryGetProperty("username", out var u2) ? u2.GetString() ?? string.Empty : string.Empty);
+                        var username = _connections.GetUsername(connectionId) ?? 
+                            (doc.RootElement.TryGetProperty("username", out var u2) ? (u2.GetString() ?? string.Empty) : string.Empty);
                         var typingEvt = JsonSerializer.Serialize(new { type = "typing", username, isTyping, timestamp = DateTime.UtcNow });
                         await _connections.BroadcastAsync(typingEvt);
                         _logger.LogDebug("Connection {ConnectionId} typing={IsTyping}", connectionId, isTyping);
