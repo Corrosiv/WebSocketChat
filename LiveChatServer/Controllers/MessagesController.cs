@@ -11,12 +11,27 @@ namespace LiveChatServer.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly IMessageRepository _repo;
+        private readonly System.Threading.SemaphoreSlim _replaySemaphore;
 
-        public MessagesController(IMessageRepository repo) => _repo = repo;
+        public MessagesController(IMessageRepository repo, Microsoft.Extensions.Options.IOptions<LiveChatServer.Services.Options.ReplayOptions> replayOptions)
+        {
+            _repo = repo;
+            var max = replayOptions?.Value?.ConcurrentReplayLimit > 0 ? replayOptions.Value.ConcurrentReplayLimit : 5;
+            _replaySemaphore = new System.Threading.SemaphoreSlim(max, max);
+        }
 
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] int limit = 50, [FromQuery] int offset = 0)
         {
+            // Try enter immediately — if the server is under heavy load and the replay
+            // quota is exhausted, return 429 and advise retry.
+            if (!await _replaySemaphore.WaitAsync(0))
+            {
+                return StatusCode(429, new ApiErrorDto { Code = "too_many_replays", Message = "Too many concurrent replay requests. Try again later." });
+            }
+
+            try
+            {
             if (limit < 0 || limit > 200)
             {
                 return BadRequest(new ApiErrorDto
@@ -35,8 +50,8 @@ namespace LiveChatServer.Controllers
                 });
             }
 
-            var msgs = await _repo.GetRecentMessagesAsync(limit, offset);
-            var total = await _repo.GetTotalCountAsync();
+                var msgs = await _repo.GetRecentMessagesAsync(limit, offset);
+                var total = await _repo.GetTotalCountAsync();
 
             // Map domain ChatMessage to a client-friendly DTO
             var list = new List<MessageDto>();
@@ -52,13 +67,18 @@ namespace LiveChatServer.Controllers
                 });
             }
 
-            return Ok(new PagedResponse<MessageDto>
+                return Ok(new PagedResponse<MessageDto>
+                {
+                    Items = list,
+                    Total = total,
+                    Limit = limit,
+                    Offset = offset
+                });
+            }
+            finally
             {
-                Items = list,
-                Total = total,
-                Limit = limit,
-                Offset = offset
-            });
+                _replaySemaphore.Release();
+            }
         }
     }
 }
